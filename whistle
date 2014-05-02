@@ -149,10 +149,16 @@ sub draw_menu {
     $playlists->draw();
     my %pl;
     $curlist->values('');
+    my $pl_w = $curlist->width() / 9;
+    my ($pl_t, $pl_a, $pl_al, $pl_d) = (int($pl_w * 2) , int($pl_w * 1), int($pl_w * 2), int ($pl_w));
+    $pl_t = "$pl_t.$pl_t" . "s";
+    $pl_a = "$pl_a.$pl_a" . "s";
+    $pl_al = "$pl_al.$pl_al" . "s";
+    $pl_d = "$pl_d.$pl_d" . "s";
     if (%{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
         for (sort keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
             if (defined $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}) {
-                my $full_line = sprintf(" %30.30s | %20.20s | %30.30s | %10.10s",  $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}, 
+                my $full_line = sprintf(" %$pl_t | %$pl_a | %$pl_al | %$pl_d",  $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}, 
                                                       $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'artist'}, 
                                                       $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'album'}, 
                                                       $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'duration'});
