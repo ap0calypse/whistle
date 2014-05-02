@@ -21,6 +21,12 @@ our $STORAGE;               # storage hashref
 our $SHUFFLE = 0;           # 0 = normal, 1 = random
 our $CUR_LIST = 'ALL';      # current playlist
 
+my ($dir_add, $dir_rem, $pl_add, $pl_del);
+my $sel_pl;     # placeholder for input 'listbox-windows'
+my $num_songs = 0;
+our $MAX_PL;
+our $STATE = 0;
+
 # turn on autoflush
 $| = 1;
 
@@ -36,13 +42,14 @@ else {
     $STORAGE->{'PLAYLIST'}{'ALL'} = {};
 }
 
-# pretty nasty shit, but neccessary
+# pretty nasty shit, but neccessary for continuous playing
 $SIG{ALRM} = sub { &play('NEXT'); };
 
+# create the main ui and main window
 my $cui = new Curses::UI ( -clear_on_exit => 0, -color_support => 1);
 my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle $VERSION");
 
-
+# create current playlist 'window'
 my $curlist = $win->add( 
     'curlist', 'Listbox',
     -fg => 'white',
@@ -61,6 +68,7 @@ my $curlist = $win->add(
     -homeonblur => 0,
 ) or die "curlist";
 
+# create controls 'window'
 my $controls = $win->add( 
     'controls', 'TextViewer',
     -fg => 'white',
@@ -75,6 +83,8 @@ my $controls = $win->add(
     -intellidraw => 1,
     -border => 1,
 ) or die "controls";
+
+# create playlist 'window'
 my $playlists = $win->add( 
     'playlists', 'TextViewer',
     -fg => 'white',
@@ -90,6 +100,8 @@ my $playlists = $win->add(
     -border => 1,
     -ipad => 1,
 ) or die "playlists";
+
+# create directory 'window'
 my $directories = $win->add( 
     'directories', 'TextViewer',
     -fg => 'white',
@@ -106,7 +118,7 @@ my $directories = $win->add(
     -ipad => 1,
 ) or die "directories";
 
-
+# draw the menu
 sub draw_menu {
     $controls->text("\n (P)lay/(p)ause (n)ext p(r)evious (S)top\n" .
                     "              (t)oggle shuffle\n\n" .
@@ -147,7 +159,6 @@ sub draw_menu {
                 $pl{$_} = $full_line;
             }
         }
-    
         for (sort {$a <=> $b } keys %pl) {
             $curlist->insert_at($_, $pl{$_});
         }
@@ -160,10 +171,12 @@ sub draw_menu {
     $curlist->draw();
 }
 
+# store the storage hashref to .whistle.dat
 sub store_data {
     nstore($STORAGE, $STORFILE);
 }
 
+# quit the program, close filehandles, store data
 sub quit_program {
     close $Min;
     close $Mout;
@@ -172,8 +185,7 @@ sub quit_program {
     exit(0);
 }
 
-my $num_songs = 0;
-
+# find-function for found mp3's. writes returned data to storage hashref
 sub found_mp3 {
     if ($_ =~ m/.+\.(mp3|MP3)$/) {
         my $taghash = get_mp3tag($File::Find::name);
@@ -189,17 +201,8 @@ sub found_mp3 {
     }
 }
 
-my ($dir_add, $dir_rem, $pl_add, $pl_del);
-
-
 # func: add_dir
 # adds a new directory to the STORAGE hashref.
-#
-# side effects:
-# calls find which calls found_mp3
-# calls draw_menu
-#
-#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 sub add_dir {
     $dir_add = $cui->question('Please enter the path to your music directory');
     if (defined $dir_add && -d $dir_add) {
@@ -217,14 +220,8 @@ sub add_dir {
     &draw_menu();
 }
 
-
 # func: new_pl
 # creates a new playlist with an empty hashref ready for filling
-#
-# side effects:
-# calls draw_menu
-#
-#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 sub new_pl {
     $pl_add = $cui->question('Please enter a name for the new playlist');
     if ($pl_add =~ m/^[a-zA-Z0-9_]+$/) {
@@ -234,17 +231,9 @@ sub new_pl {
     }
     &draw_menu();
 }
-#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-
 
 # func: rem_dir
 # removes a music directory from the STORAGE hashref.
-#
-# side effects:
-# calls find which calls found_mp3 
-# calls draw_menu
-#
-#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 sub rem_dir {
     $dir_rem = $cui->question('Please specify the directory you want to remove');
     @{$STORAGE->{'DIRS'}} = grep {!/^$dir_rem$/} @{$STORAGE->{'DIRS'}};
@@ -258,13 +247,9 @@ sub rem_dir {
     }
     &draw_menu();
 }
-#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
-
 
 # func: del_pl
 # deletes a playlist. the 'ALL' playlist must not be deleted!
-#
-#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 sub del_pl {
     $pl_del = $cui->question('Please enter the name of the playlist you want to delete');
     unless ($pl_del eq "ALL") {
@@ -274,81 +259,51 @@ sub del_pl {
     }
     &draw_menu();
 }
-#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-
-our $MAX_PL;
-our $STATE = 0;
-
+# plays the selected item or next/prev if given
 sub play {
     print $Min "silence\n";
+    print $Min "s\n";
     $MAX_PL = (scalar (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})) - 1;
-    #$MAX_PL = (sort {$b <=> $a} keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})[0];
     my $next = shift || '';
+    my ($index, $cur);
     if ($next eq 'NEXT') {
-        print $Min "s\n";
-        #my $cur = $curlist->get() + 1;   # here dragons
-        my $index = $SHUFFLE ? int(rand($MAX_PL)) : $curlist->id() + 1;
+        $index = $SHUFFLE ? int(rand($MAX_PL)) : $curlist->id() + 1;
         $index = $index > $MAX_PL ? 0 : $index;
         $curlist->set_selection($index);
-        my $cur = $curlist->get();   # here dragons
-        #$cur = $cur > $MAX_PL ? 0 : $cur;
-        #$index = $index > $MAX_PL ? 0 : $index;
-        my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
-        my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
-        my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'};
-        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
-        $curlist->set_selection($index);
-        $curlist->draw();
-        print $Min "load $file\n";
-        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
-        alarm($altime);
+        $cur = $curlist->get();
     }
     elsif ($next eq 'PREV') {
-        print $Min "s\n";
-        #my $cur = $curlist->get() - 1;
-        my $index = $SHUFFLE ? int(rand($MAX_PL)) : $curlist->id() - 1;
+        $index = $SHUFFLE ? int(rand($MAX_PL)) : $curlist->id() - 1;
         $index = $index < 0 ? $MAX_PL : $index;
         $curlist->set_selection($index);
-        my $cur = $curlist->get();
-        #$cur = $cur < 0 ? $MAX_PL : $cur;
-        my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
-        my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
-        my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'};
-        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
-        $curlist->set_selection($index);
-        $curlist->draw();
-        print $Min "load $file\n";
-        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
-        alarm($altime);
+        $cur = $curlist->get();
     }
     else {
-        print $Min "s\n";
-        my $cur = $curlist->get() || '0';
-        my $index = $curlist->id() || '0';
-        my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
-        my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
-        my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'};
-        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
+        $cur = $curlist->get() || '0';
+        $index = $curlist->id() || '0';
         $curlist->set_selection($index);
-        $curlist->draw();
-        print $Min "load $file\n";
-        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
-        alarm($altime);
     }
+    my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
+    my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
+    my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'};
+    $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
+    $curlist->draw();
+    print $Min "load $file\n";
+    my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
+    alarm($altime);
 }
 
-
-# this is actually amazing!
-# i'm not even mad. very easy pause function :D
-our $rest_altime;
-
+# stop the current track, deactivate alarm
 sub stop {
     print $Min "s\n";
     $curlist->title("Playlist: $CUR_LIST :: STOPPED");
     $curlist->draw();
     alarm(0);
 }
+
+# pause the track, save alarm time, restart alarm if unpaused
+our $rest_altime;
 sub pause {
     print $Min "p\n";
     $STATE = $STATE ? 0 : 1;
@@ -359,7 +314,8 @@ sub pause {
         alarm($rest_altime);
     }
 }
-my $sel_pl;
+
+# add currently selected track to playlist
 sub add_to_pl {
     my $num = $curlist->get();
     $sel_pl = $win->add(
@@ -383,6 +339,7 @@ sub add_to_pl {
     $STORAGE->{'PLAYLIST'}{$selected}{$num} = $STORAGE->{'PLAYLIST'}{'ALL'}{$num};
 }
 
+# switch playlist
 sub switch_pl {
     $sel_pl = $win->add(
             'sel_pl', 'Listbox',
@@ -407,10 +364,16 @@ sub switch_pl {
     &draw_menu();
 }
 
+# play next item in list
 sub next { &play('NEXT'); }
+
+# play previous item in list 
 sub prev { &play('PREV'); }
+
+# toggle shuffle, 1 = shuffle, 0 = normal playlist order
 sub toggle_shuffle { $SHUFFLE = $SHUFFLE ? 0 : 1; $curlist->draw();}
 
+# seek 10 seconds back in music stream
 sub seek_right {
     print $Min "J +10s\n";
     my $newal = alarm(0);
@@ -418,7 +381,7 @@ sub seek_right {
     alarm($newal);
 }
 
-
+# seek 10 seconds forward in music stream
 sub seek_left {
     print $Min "J -10s\n";
     my $newal = alarm(0);
@@ -426,8 +389,14 @@ sub seek_left {
     alarm($newal);
 }
 
+# delete the currently selected item from the currently selected playlist
 sub del_from_pl {
     my $to_del = $curlist->get();
+    return unless $to_del;
+    if (exists $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$to_del}) {
+        delete $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$to_del};
+    }
+    &draw_menu();    
 }
 
 # define keybindings, draw menu for first time, start main loop :)
