@@ -1,0 +1,58 @@
+README - whistle
+
+Prerequisites:
+--------------
+
+Perl Modules:
+    
+        - MP3::Info     (archlinux-package: perl-mp3-info)
+        - Curses::UI    (archlinux-package: perl-curses-ui)
+
+Programs:
+
+        - mpg123
+
+
+What works?
+-----------
+
+        - full MP3 play/stop/next/prev/seek/shuffle support
+        - playlists
+
+
+What's to come?
+---------------
+
+        - a lot of bugfixes for sure
+        - multi-select for playlist/tag editing
+        - mp3 tag write support
+        - (equalizer?)
+        - ...
+        - your feature request?
+
+
+Usage:
+------
+
+whistle must be started within a fully functional terminal.
+
+The first step is to add a music directory with 'A'. The standard
+usage scenario then is to select what you want to play and press 'P'.
+
+
+
+About:
+------
+
+whistle aims to be a very minimalistic and basic mp3 player.
+
+Basically, whistle is a nifty front-end to mpg123, which it's
+based on. Without mpg123, there would be no whistle.
+
+
+Thanks:
+-------
+
+ - all developers behind mpg123
+ - all developers from Curses and Curses::UI
+ - all developers from MP3::Info

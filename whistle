@@ -1,0 +1,451 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Curses::UI;
+use MP3::Info;
+use Storable qw(nstore retrieve);
+use File::Find;
+use IPC::Open2;
+use Curses;
+
+# project:          whistle
+# author:           see AUTHORS
+# license:          see LICENSE
+# purpose:          see README
+#
+
+# versions, data location, hashref declaratiion, global vars
+our $VERSION = '0.1';
+our $STORFILE = $ENV{'HOME'} . "/.whistle.dat";
+our $STORAGE;               # storage hashref
+our $SHUFFLE = 0;           # 0 = normal, 1 = random
+our $CUR_LIST = 'ALL';      # current playlist
+
+# turn on autoflush
+$| = 1;
+
+# open read and write handles for mpg123
+open2(my $Mout, my $Min, "/usr/bin/mpg123 -R") or die "mpg123 hates me :(";
+
+# read in data if available, otherwise initialise STORAGE hashref
+if (-e $STORFILE && (stat $STORFILE)[7] > 5) {
+    $STORAGE = retrieve $STORFILE;
+}
+else {
+    $STORAGE = { 'DIRS' => [], 'PLAYLIST' => {}};
+    $STORAGE->{'PLAYLIST'}{'ALL'} = {};
+}
+
+# pretty nasty shit, but neccessary
+$SIG{ALRM} = sub { &play('NEXT'); };
+
+my $cui = new Curses::UI ( -clear_on_exit => 0, -color_support => 1);
+my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle $VERSION");
+
+
+my $curlist = $win->add( 
+    'curlist', 'Listbox',
+    -fg => 'white',
+    -title => "Playlist: $CUR_LIST",
+    -readonly => 1,
+    -y => 1,
+    -x => int ($win->width() / 4) + 5,
+    -focusable => 1,
+    -vscrollbar => 'right',
+    -wrapping => 1,
+    -height => int ($win->height() * 0.9),
+    -width => int ($win->width() / 1.5),
+    -intellidraw => 1,
+    -border => 1,
+    -ipad => 1,
+    -homeonblur => 0,
+) or die "curlist";
+
+my $controls = $win->add( 
+    'controls', 'TextViewer',
+    -fg => 'white',
+    -title => ".:Controls:.",
+    -readonly => 1,
+    -y => 1,
+    -x => 1,
+    -focusable => 0,
+    -wrapping => 0,
+    -height => int ($win->height() / 4),
+    -width => int ($win->width() / 4),
+    -intellidraw => 1,
+    -border => 1,
+) or die "controls";
+my $playlists = $win->add( 
+    'playlists', 'TextViewer',
+    -fg => 'white',
+    -title => ".:Playlists:.",
+    -readonly => 1,
+    -y => int($win->height() / 4 + 1),
+    -x => 1,
+    -focusable => 0,
+    -wrapping => 1,
+    -height => int ($win->height() / 2.5),
+    -width => int ($win->width() / 4),
+    -intellidraw => 1,
+    -border => 1,
+    -ipad => 1,
+) or die "playlists";
+my $directories = $win->add( 
+    'directories', 'TextViewer',
+    -fg => 'white',
+    -title => ".:Directories:.",
+    -readonly => 1,
+    -y => int($win->height() * 0.7),
+    -x => 1,
+    -focusable => 0,
+    -wrapping => 1,
+    -height => int ($win->height() / 5),
+    -width => int ($win->width() / 4),
+    -intellidraw => 1,
+    -border => 1,
+    -ipad => 1,
+) or die "directories";
+
+
+sub draw_menu {
+    $controls->text("\n (P)lay/(p)ause (n)ext p(r)evious (S)top\n" .
+                    "              (t)oggle shuffle\n\n" .
+                    " (a)dd / (d)el / (s)witch to/from playlist\n" .
+                    " (A)dd / (R)emove dir - (N)ew / (D)el List\n\n" .
+                    "        SPACE or ENTER to select\n" .
+                    "    LEFT / RIGHT Arrow Key seek +-10s"
+                    );
+    $controls->draw();
+    my $dirtxt;
+    if (scalar @{$STORAGE->{'DIRS'}}) {
+        for (@{$STORAGE->{'DIRS'}}) {
+            $dirtxt .= "$_\n";
+        }
+    }
+    else {
+        $dirtxt = "no directories given";
+    }
+    $directories->text($dirtxt);
+    $directories->draw();
+    my $pltxt;
+    $playlists->text('');
+    $playlists->draw();
+    for (sort keys %{$STORAGE->{'PLAYLIST'}}) {
+        $pltxt .= $_ eq 'ALL' ? "$_\n" : " \`-> $_\n";
+    }
+    $playlists->text($pltxt);
+    $playlists->draw();
+    my %pl;
+    $curlist->values('');
+    if (%{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
+        for (sort keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
+            if (defined $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}) {
+                my $full_line = sprintf(" %30.30s | %20.20s | %30.30s | %10.10s",  $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}, 
+                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'artist'}, 
+                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'album'}, 
+                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'duration'});
+                $pl{$_} = $full_line;
+            }
+        }
+    
+        for (sort {$a <=> $b } keys %pl) {
+            $curlist->insert_at($_, $pl{$_});
+        }
+    }
+    else {
+        $curlist->values("no files found, please add a music directory");
+    }
+    $curlist->values(sort {$a <=> $b} keys %pl);
+    $curlist->labels(\%pl);
+    $curlist->draw();
+}
+
+sub store_data {
+    nstore($STORAGE, $STORFILE);
+}
+
+sub quit_program {
+    close $Min;
+    close $Mout;
+    store_data();
+    $cui->exit_curses();
+    exit(0);
+}
+
+my $num_songs = 0;
+
+sub found_mp3 {
+    if ($_ =~ m/.+\.(mp3|MP3)$/) {
+        my $taghash = get_mp3tag($File::Find::name);
+        my $infohash = get_mp3info($File::Find::name);
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'filename'} = $File::Find::name;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'artist'} = $taghash->{ARTIST} || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'album'} = $taghash->{ALBUM} || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'title'} = $taghash->{TITLE} || $_;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'duration'} = sprintf("%02d:%02d", 
+                                                                        $infohash->{MM} || 0, $infohash->{SS} || 0);
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'duration_s'} = sprintf("%d", ($infohash->{MM} || 0) * 60 + ($infohash->{SS} || 0));
+        $num_songs++;
+    }
+}
+
+my ($dir_add, $dir_rem, $pl_add, $pl_del);
+
+
+# func: add_dir
+# adds a new directory to the STORAGE hashref.
+#
+# side effects:
+# calls find which calls found_mp3
+# calls draw_menu
+#
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+sub add_dir {
+    $dir_add = $cui->question('Please enter the path to your music directory');
+    if (defined $dir_add && -d $dir_add) {
+        unless (grep {/^$dir_add$/} @{$STORAGE->{'DIRS'}}) {
+            push @{$STORAGE->{'DIRS'}}, $dir_add;
+            $num_songs = 0;
+            if (scalar @{$STORAGE->{'DIRS'}}) {
+                find(\&found_mp3, @{$STORAGE->{'DIRS'}});
+            }
+            else {
+                $STORAGE->{'PLAYLIST'}{'ALL'} = undef;
+            }
+        }
+    }
+    &draw_menu();
+}
+
+
+# func: new_pl
+# creates a new playlist with an empty hashref ready for filling
+#
+# side effects:
+# calls draw_menu
+#
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+sub new_pl {
+    $pl_add = $cui->question('Please enter a name for the new playlist');
+    if ($pl_add =~ m/^[a-zA-Z0-9_]+$/) {
+        unless (grep {/^$pl_add$/} keys %{$STORAGE->{'PLAYLIST'}}) {
+            $STORAGE->{'PLAYLIST'}{$pl_add} = {};
+        }
+    }
+    &draw_menu();
+}
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+
+# func: rem_dir
+# removes a music directory from the STORAGE hashref.
+#
+# side effects:
+# calls find which calls found_mp3 
+# calls draw_menu
+#
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+sub rem_dir {
+    $dir_rem = $cui->question('Please specify the directory you want to remove');
+    @{$STORAGE->{'DIRS'}} = grep {!/^$dir_rem$/} @{$STORAGE->{'DIRS'}};
+    $num_songs = 0;
+    if (scalar @{$STORAGE->{'DIRS'}}) {
+        find(\&found_mp3, @{$STORAGE->{'DIRS'}});
+    }
+    else { 
+        $STORAGE->{'DIRS'} = [];
+        $STORAGE->{'PLAYLIST'}{'ALL'} = {};
+    }
+    &draw_menu();
+}
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+
+# func: del_pl
+# deletes a playlist. the 'ALL' playlist must not be deleted!
+#
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+sub del_pl {
+    $pl_del = $cui->question('Please enter the name of the playlist you want to delete');
+    unless ($pl_del eq "ALL") {
+        if (exists $STORAGE->{'PLAYLIST'}{$pl_del}) {
+            delete $STORAGE->{'PLAYLIST'}{$pl_del};
+        }
+    }
+    &draw_menu();
+}
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
+
+our $MAX_PL;
+our $STATE = 0;
+
+sub play {
+    print $Min "silence\n";
+    $MAX_PL = (scalar (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})) - 1;
+    #$MAX_PL = (sort {$b <=> $a} keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})[0];
+    my $next = shift || '';
+    if ($next eq 'NEXT') {
+        print $Min "s\n";
+        #my $cur = $curlist->get() + 1;   # here dragons
+        my $index = $SHUFFLE ? int(rand($MAX_PL)) : $curlist->id() + 1;
+        $index = $index > $MAX_PL ? 0 : $index;
+        $curlist->set_selection($index);
+        my $cur = $curlist->get();   # here dragons
+        #$cur = $cur > $MAX_PL ? 0 : $cur;
+        #$index = $index > $MAX_PL ? 0 : $index;
+        my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
+        my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
+        my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'};
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
+        $curlist->set_selection($index);
+        $curlist->draw();
+        print $Min "load $file\n";
+        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
+        alarm($altime);
+    }
+    elsif ($next eq 'PREV') {
+        print $Min "s\n";
+        #my $cur = $curlist->get() - 1;
+        my $index = $SHUFFLE ? int(rand($MAX_PL)) : $curlist->id() - 1;
+        $index = $index < 0 ? $MAX_PL : $index;
+        $curlist->set_selection($index);
+        my $cur = $curlist->get();
+        #$cur = $cur < 0 ? $MAX_PL : $cur;
+        my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
+        my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
+        my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'};
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
+        $curlist->set_selection($index);
+        $curlist->draw();
+        print $Min "load $file\n";
+        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
+        alarm($altime);
+    }
+    else {
+        print $Min "s\n";
+        my $cur = $curlist->get() || '0';
+        my $index = $curlist->id() || '0';
+        my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
+        my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
+        my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'};
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
+        $curlist->set_selection($index);
+        $curlist->draw();
+        print $Min "load $file\n";
+        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
+        alarm($altime);
+    }
+}
+
+
+# this is actually amazing!
+# i'm not even mad. very easy pause function :D
+our $rest_altime;
+
+sub stop {
+    print $Min "s\n";
+    $curlist->title("Playlist: $CUR_LIST :: STOPPED");
+    $curlist->draw();
+    alarm(0);
+}
+sub pause {
+    print $Min "p\n";
+    $STATE = $STATE ? 0 : 1;
+    if ($STATE == 1) {
+        $rest_altime = alarm(0);
+    }
+    else {
+        alarm($rest_altime);
+    }
+}
+my $sel_pl;
+sub add_to_pl {
+    my $num = $curlist->get();
+    $sel_pl = $win->add(
+            'sel_pl', 'Listbox',
+            -values    => [grep {!/ALL/} keys %{$STORAGE->{'PLAYLIST'}}],
+            -radio     => 1,
+            -y => int ($win->height() / 2),
+            -x => int ($win->width() / 4) + 5,
+            -focusable => 1,
+            -height => 10,
+            -width => 40,
+            -border => 1,
+            -ipad => 2,
+    );
+    $sel_pl->title('Please choose the playlist, and press TAB');
+    $sel_pl->draw();
+    $sel_pl->modalfocus();
+    my $selected = $sel_pl->get();
+    $sel_pl->loose_focus();
+    $win->delete('sel_pl');
+    $STORAGE->{'PLAYLIST'}{$selected}{$num} = $STORAGE->{'PLAYLIST'}{'ALL'}{$num};
+}
+
+sub switch_pl {
+    $sel_pl = $win->add(
+            'sel_pl', 'Listbox',
+            -values    => [keys %{$STORAGE->{'PLAYLIST'}}],
+            -radio     => 1,
+            -y => int ($win->height() / 2),
+            -x => int ($win->width() / 4) + 5,
+            -focusable => 1,
+            -height => 10,
+            -width => 40,
+            -border => 1,
+            -ipad => 2,
+    );
+    $sel_pl->title('Please choose the playlist, and press TAB');
+    $sel_pl->draw();
+    $sel_pl->modalfocus();
+    my $selected = $sel_pl->get();
+    $sel_pl->loose_focus();
+    $win->delete('sel_pl');
+    $CUR_LIST = $selected  || 'ALL';  
+    $curlist->title("Playlist: $CUR_LIST");
+    &draw_menu();
+}
+
+sub next { &play('NEXT'); }
+sub prev { &play('PREV'); }
+sub toggle_shuffle { $SHUFFLE = $SHUFFLE ? 0 : 1; $curlist->draw();}
+
+sub seek_right {
+    print $Min "J +10s\n";
+    my $newal = alarm(0);
+    $newal += 10;
+    alarm($newal);
+}
+
+
+sub seek_left {
+    print $Min "J -10s\n";
+    my $newal = alarm(0);
+    $newal -= 10;
+    alarm($newal);
+}
+
+sub del_from_pl {
+    my $to_del = $curlist->get();
+}
+
+# define keybindings, draw menu for first time, start main loop :)
+$cui->set_binding(\&quit_program, "Q");
+$cui->set_binding(\&add_dir, "A");
+$cui->set_binding(\&rem_dir, "R");
+$cui->set_binding(\&del_pl, "D");
+$cui->set_binding(\&new_pl, "N");
+$cui->set_binding(\&play, "P" );
+$cui->set_binding(\&pause, "p" );
+$cui->set_binding(\&add_to_pl, "a" );
+$cui->set_binding(\&del_from_pl, "d" );
+$cui->set_binding(\&switch_pl, "s" );
+$cui->set_binding(\&next, "n" );
+$cui->set_binding(\&prev, "r" );
+$cui->set_binding(\&toggle_shuffle, "t" );
+$cui->set_binding(\&stop, "S" );
+$cui->set_binding(\&seek_right, KEY_RIGHT );
+$cui->set_binding(\&seek_left, KEY_LEFT );
+&draw_menu();
+$cui->mainloop();
