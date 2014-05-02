@@ -326,7 +326,7 @@ sub add_to_pl {
             -x => int ($win->width() / 4) + 5,
             -focusable => 1,
             -height => 10,
-            -width => 40,
+            -width => 60,
             -border => 1,
             -ipad => 2,
     );
@@ -349,7 +349,7 @@ sub switch_pl {
             -x => int ($win->width() / 4) + 5,
             -focusable => 1,
             -height => 10,
-            -width => 40,
+            -width => 60,
             -border => 1,
             -ipad => 2,
     );
