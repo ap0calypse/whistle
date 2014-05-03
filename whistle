@@ -271,16 +271,17 @@ sub play {
     print $Min "silence\n";
     print $Min "s\n";
     $MAX_PL = (scalar (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})) - 1;
+    return if $MAX_PL < 1;
     my $next = shift || '';
     my ($index, $cur);
     if ($next eq 'NEXT') {
-        $index = $SHUFFLE ? int(rand($MAX_PL)) : $curlist->id() + 1;
+        $index = $SHUFFLE ? int(rand($MAX_PL)) : ($curlist->id() || 0) + 1;
         $index = $index > $MAX_PL ? 0 : $index;
         $curlist->set_selection($index);
         $cur = $curlist->get();
     }
     elsif ($next eq 'PREV') {
-        $index = $SHUFFLE ? int(rand($MAX_PL)) : $curlist->id() - 1;
+        $index = $SHUFFLE ? int(rand($MAX_PL)) : ($curlist->id() || 0) - 1;
         $index = $index < 0 ? $MAX_PL : $index;
         $curlist->set_selection($index);
         $cur = $curlist->get();
