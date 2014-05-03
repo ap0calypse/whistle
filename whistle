@@ -209,7 +209,7 @@ sub found_mp3 {
 # adds a new directory to the STORAGE hashref.
 sub add_dir {
     $dir_add = $cui->question('Please enter the path to your music directory');
-    if (defined $dir_add && -d $dir_add) {
+    if (defined $dir_add && -d $dir_add && length $dir_add) {
         unless (grep {/^$dir_add$/} @{$STORAGE->{'DIRS'}}) {
             push @{$STORAGE->{'DIRS'}}, $dir_add;
             $num_songs = 0;
