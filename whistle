@@ -381,20 +381,28 @@ sub prev { &play('PREV'); }
 # toggle shuffle, 1 = shuffle, 0 = normal playlist order
 sub toggle_shuffle { $SHUFFLE = $SHUFFLE ? 0 : 1; $curlist->draw();}
 
-# seek 10 seconds back in music stream
+# seek 10 seconds forward in music stream
 sub seek_right {
     print $Min "J +10s\n";
     my $newal = alarm(0);
-    $newal += 10;
+    if ($newal > 10) {
+        $newal -= 10 ;
+    }
+    else { $newal = 1; }
     alarm($newal);
 }
 
-# seek 10 seconds forward in music stream
+# seek 10 seconds back in music stream
 sub seek_left {
-    print $Min "J -10s\n";
     my $newal = alarm(0);
-    $newal -= 10;
-    alarm($newal);
+    if ($newal > 10) {
+        print $Min "J -10s\n";
+        $newal += 10;
+        alarm($newal);
+    }
+    else {
+        alarm($newal);
+    }
 }
 
 # delete the currently selected item from the currently selected playlist
