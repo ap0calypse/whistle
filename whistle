@@ -12,7 +12,6 @@ use Curses;
 # author:           see AUTHORS
 # license:          see LICENSE
 # purpose:          see README
-#
 
 # versions, data location, hashref declaratiion, global vars
 our $VERSION = '0.1';
@@ -21,8 +20,7 @@ our $STORAGE;               # storage hashref
 our $SHUFFLE = 0;           # 0 = normal, 1 = random
 our $CUR_LIST = 'ALL';      # current playlist
 
-my ($dir_add, $dir_rem, $pl_add, $pl_del);
-my $sel_pl;     # placeholder for input 'listbox-windows'
+my ($dir_add, $dir_rem, $pl_add, $pl_del, $sel_pl);
 my $num_songs = 0;
 our $MAX_PL;
 our $STATE = 0;
@@ -149,7 +147,7 @@ sub draw_menu {
     $playlists->draw();
     my %pl;
     $curlist->values('');
-    my $pl_w = $curlist->width() / 9;
+    my $pl_w = int($curlist->width() / 9);
     my ($pl_t, $pl_a, $pl_al, $pl_d) = (int($pl_w * 2) , int($pl_w * 1), int($pl_w * 2), int ($pl_w));
     $pl_t = "$pl_t.$pl_t" . "s";
     $pl_a = "$pl_a.$pl_a" . "s";
@@ -229,8 +227,8 @@ sub add_dir {
 # func: new_pl
 # creates a new playlist with an empty hashref ready for filling
 sub new_pl {
-    $pl_add = $cui->question('Please enter a name for the new playlist');
-    if ($pl_add =~ m/^[a-zA-Z0-9_]+$/) {
+    $pl_add = $cui->question('Please enter a name (a-zA-Z0-9_) for the new playlist');
+    if ($pl_add =~ m/^[a-zA-Z0-9_]+$/ && length $pl_add) {
         unless (grep {/^$pl_add$/} keys %{$STORAGE->{'PLAYLIST'}}) {
             $STORAGE->{'PLAYLIST'}{$pl_add} = {};
         }
@@ -325,6 +323,7 @@ sub pause {
 # add currently selected track to playlist
 sub add_to_pl {
     my $num = $curlist->get();
+    return unless $num;
     $sel_pl = $win->add(
             'sel_pl', 'Listbox',
             -values    => [grep {!/ALL/} keys %{$STORAGE->{'PLAYLIST'}}],
@@ -343,7 +342,9 @@ sub add_to_pl {
     my $selected = $sel_pl->get();
     $sel_pl->loose_focus();
     $win->delete('sel_pl');
-    $STORAGE->{'PLAYLIST'}{$selected}{$num} = $STORAGE->{'PLAYLIST'}{'ALL'}{$num};
+    if (defined $selected) {
+        $STORAGE->{'PLAYLIST'}{$selected}{$num} = $STORAGE->{'PLAYLIST'}{'ALL'}{$num};
+    }
 }
 
 # switch playlist
