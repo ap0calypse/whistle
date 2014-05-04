@@ -51,6 +51,7 @@ my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle");
 my $curlist = $win->add( 
     'curlist', 'Listbox',
     -fg => 'white',
+    -multi => 1,
     -title => "Playlist: $CUR_LIST",
     -readonly => 1,
     -y => 1,
@@ -118,6 +119,7 @@ my $directories = $win->add(
 
 # draw the menu
 sub draw_menu {
+    $curlist->clear_selection();
     $controls->text("\n (P)lay/(p)ause (n)ext p(r)evious (S)top\n" .
                     "              (t)oggle shuffle\n\n" .
                     " (a)dd / (d)el / (s)witch to/from playlist\n" .
@@ -266,6 +268,7 @@ sub del_pl {
 
 # plays the selected item or next/prev if given
 sub play {
+
     print $Min "silence\n";
     print $Min "s\n";
     $MAX_PL = (scalar (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})) - 1;
@@ -273,22 +276,25 @@ sub play {
     my $next = shift || '';
     my ($index, $cur);
     if ($next eq 'NEXT') {
-        $LAST_PLAYED = ($curlist->id() || 0);
-        $index = $SHUFFLE ? int(rand($MAX_PL)) : ($curlist->id() || 0) + 1;
+        $LAST_PLAYED = (($curlist->id())[0] || 0);
+        $index = $SHUFFLE ? int(rand($MAX_PL)) : (($curlist->id())[0] || 0) + 1;
         $index = $index > $MAX_PL ? 0 : $index;
+        $curlist->clear_selection();
         $curlist->set_selection($index);
-        $cur = $curlist->get();
+        $cur = ($curlist->get())[0];
     }
     elsif ($next eq 'PREV') {
-        $index = $SHUFFLE ? int(rand($MAX_PL)) : ($curlist->id() || 0) - 1;
+        $index = $SHUFFLE ? int(rand($MAX_PL)) : (($curlist->id())[0] || 0) - 1;
         $index = $index < 0 ? $MAX_PL : $index;
+        $curlist->clear_selection();
         $curlist->set_selection(($LAST_PLAYED && $SHUFFLE) ? $LAST_PLAYED : $index);
-        $cur = $curlist->get();
-        $LAST_PLAYED = $curlist->id() || 0;
+        $cur = ($curlist->get())[0];
+        $LAST_PLAYED = ($curlist->id())[0] || 0;
     }
     else {
-        $cur = $curlist->get() || '0';
-        $index = $curlist->id() || '0';
+        $cur = ($curlist->get())[0] || '0';
+        $index = ($curlist->id())[0] || '0';
+        $curlist->clear_selection();
         $curlist->set_selection($index);
         $LAST_PLAYED = $index;
     }
@@ -325,8 +331,8 @@ sub pause {
 
 # add currently selected track to playlist
 sub add_to_pl {
-    my $num = $curlist->get();
-    return unless $num;
+    my @num = $curlist->get();
+    return unless @num;
     $sel_pl = $win->add(
             'sel_pl', 'Listbox',
             -values    => [grep {!/ALL/} keys %{$STORAGE->{'PLAYLIST'}}],
@@ -346,7 +352,9 @@ sub add_to_pl {
     $sel_pl->loose_focus();
     $win->delete('sel_pl');
     if (defined $selected) {
-        $STORAGE->{'PLAYLIST'}{$selected}{$num} = $STORAGE->{'PLAYLIST'}{'ALL'}{$num};
+        for (@num) {
+            $STORAGE->{'PLAYLIST'}{$selected}{$_} = $STORAGE->{'PLAYLIST'}{'ALL'}{$_};
+        }
     }
 }
 
@@ -410,10 +418,12 @@ sub seek_left {
 
 # delete the currently selected item from the currently selected playlist
 sub del_from_pl {
-    my $to_del = $curlist->get();
-    return unless $to_del;
-    if (exists $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$to_del}) {
-        delete $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$to_del};
+    my @to_del = $curlist->get();
+    return unless @to_del;
+    for (@to_del) {
+        if (exists $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}) {
+            delete $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_};
+        }
     }
     &draw_menu();    
 }
