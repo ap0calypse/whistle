@@ -13,8 +13,7 @@ use Curses;
 # license:          see LICENSE
 # purpose:          see README
 
-# versions, data location, hashref declaratiion, global vars
-our $VERSION = '0.2';
+# data location, hashref declaratiion, global vars
 our $STORFILE = $ENV{'HOME'} . "/.whistle.dat";
 our $STORAGE;               # storage hashref
 our $SHUFFLE = 0;           # 0 = normal, 1 = random
@@ -46,7 +45,7 @@ $SIG{ALRM} = sub { &play('NEXT'); };
 
 # create the main ui and main window
 my $cui = new Curses::UI ( -clear_on_exit => 0, -color_support => 1);
-my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle $VERSION");
+my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle");
 
 # create current playlist 'window'
 my $curlist = $win->add( 
