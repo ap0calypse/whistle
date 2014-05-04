@@ -121,10 +121,10 @@ my $directories = $win->add(
 sub draw_menu {
     $curlist->clear_selection();
     $controls->text("\n (P)lay/(p)ause (n)ext p(r)evious (S)top\n" .
-                    "              (t)oggle shuffle\n\n" .
+                    " (t)oggle shuffle - r(e)scan dir\n\n" .
                     " (a)dd / (d)el / (s)witch to/from playlist\n" .
                     " (A)dd / (R)emove dir - (N)ew / (D)el List\n\n" .
-                    "        SPACE or ENTER to select\n" .
+                    "  SPACE or ENTER to select, TAB to confirm\n" .
                     "    LEFT / RIGHT Arrow Key seek +-10s"
                     );
     $controls->draw();
@@ -214,14 +214,20 @@ sub add_dir {
     if (defined $dir_add && -d $dir_add && length $dir_add) {
         unless (grep {/^$dir_add$/} @{$STORAGE->{'DIRS'}}) {
             push @{$STORAGE->{'DIRS'}}, $dir_add;
-            $num_songs = 0;
-            if (scalar @{$STORAGE->{'DIRS'}}) {
-                find(\&found_mp3, @{$STORAGE->{'DIRS'}});
-            }
-            else {
-                $STORAGE->{'PLAYLIST'}{'ALL'} = undef;
-            }
+            &rescan_dirs();
         }
+    }
+    &draw_menu();
+}
+
+# rescan collection
+sub rescan_dirs {
+    $num_songs = 0;
+    if (scalar @{$STORAGE->{'DIRS'}}) {
+        find(\&found_mp3, @{$STORAGE->{'DIRS'}});
+    }
+    else {
+        $STORAGE->{'PLAYLIST'}{'ALL'} = undef;
     }
     &draw_menu();
 }
@@ -443,6 +449,7 @@ $cui->set_binding(\&next, "n" );
 $cui->set_binding(\&prev, "r" );
 $cui->set_binding(\&toggle_shuffle, "t" );
 $cui->set_binding(\&stop, "S" );
+$cui->set_binding(\&rescan_dirs, "e" );
 $cui->set_binding(\&seek_right, KEY_RIGHT );
 $cui->set_binding(\&seek_left, KEY_LEFT );
 &draw_menu();
