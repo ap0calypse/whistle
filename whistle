@@ -292,7 +292,7 @@ sub play2progress {
     my $subval = $MAXVAL;
     while ($subval > 0) {
         $subval--;
-        my $cur_pos = int($subval * (100/$MAXVAL));
+        my $cur_pos = 100 - int($subval * (100/$MAXVAL));
         $progressbar->pos($cur_pos);
         $progressbar->draw();
         sleep 1;
