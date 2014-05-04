@@ -6,7 +6,7 @@ use MP3::Info;
 use Storable qw(nstore retrieve);
 use File::Find;
 use IPC::Open2;
-use Curses;
+use Curses qw(KEY_LEFT KEY_RIGHT);
 
 # project:          whistle
 # author:           see AUTHORS
