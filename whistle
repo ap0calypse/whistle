@@ -19,6 +19,7 @@ our $STORFILE = $ENV{'HOME'} . "/.whistle.dat";
 our $STORAGE;               # storage hashref
 our $SHUFFLE = 0;           # 0 = normal, 1 = random
 our $CUR_LIST = 'ALL';      # current playlist
+our $LAST_PLAYED = 0;
 
 my ($dir_add, $dir_rem, $pl_add, $pl_del, $sel_pl);
 my $num_songs = 0;
@@ -273,6 +274,7 @@ sub play {
     my $next = shift || '';
     my ($index, $cur);
     if ($next eq 'NEXT') {
+        $LAST_PLAYED = ($curlist->id() || 0);
         $index = $SHUFFLE ? int(rand($MAX_PL)) : ($curlist->id() || 0) + 1;
         $index = $index > $MAX_PL ? 0 : $index;
         $curlist->set_selection($index);
@@ -281,13 +283,15 @@ sub play {
     elsif ($next eq 'PREV') {
         $index = $SHUFFLE ? int(rand($MAX_PL)) : ($curlist->id() || 0) - 1;
         $index = $index < 0 ? $MAX_PL : $index;
-        $curlist->set_selection($index);
+        $curlist->set_selection(($LAST_PLAYED && $SHUFFLE) ? $LAST_PLAYED : $index);
         $cur = $curlist->get();
+        $LAST_PLAYED = $curlist->id() || 0;
     }
     else {
         $cur = $curlist->get() || '0';
         $index = $curlist->id() || '0';
         $curlist->set_selection($index);
+        $LAST_PLAYED = $index;
     }
     my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
     my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
