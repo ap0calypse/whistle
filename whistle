@@ -117,18 +117,18 @@ my $directories = $win->add(
     -border => 1,
     -ipad => 1,
 ) or die "directories";
-my $progressbar = $win->add(
-    'progressbar', 'Progressbar',
-    -max       => 100,
-    -pos       => 0,
-    -y => int($win->height() * 0.9),
-    -x => 1,
-    -focusable => 0,
-    -height => int ($win->height() / 8),
-    -width => int ($win->width() / 4),
-);
+#my $progressbar = $win->add(
+#    'progressbar', 'Progressbar',
+#    -max       => 100,
+#    -pos       => 0,
+#    -y => int($win->height() * 0.9),
+#    -x => 1,
+#    -focusable => 0,
+#    -height => int ($win->height() / 8),
+#    -width => int ($win->width() / 4),
+#);
 
-$progressbar->draw;
+#$progressbar->draw;
 # draw the menu
 sub draw_menu {
     $curlist->clear_selection();
@@ -287,17 +287,17 @@ sub del_pl {
     &draw_menu();
 }
 
-sub play2progress {
-    my $MAXVAL = shift;
-    my $subval = $MAXVAL;
-    while ($subval > 0) {
-        $subval--;
-        my $cur_pos = 100 - int($subval * (100/$MAXVAL));
-        $progressbar->pos($cur_pos);
-        $progressbar->draw();
-        sleep 1;
-    }
-}
+#sub play2progress {
+#    my $MAXVAL = shift;
+#    my $subval = $MAXVAL;
+#    while ($subval > 0) {
+#        $subval--;
+#        my $cur_pos = 100 - int($subval * (100/$MAXVAL));
+#        $progressbar->pos($cur_pos);
+#        $progressbar->draw();
+#        sleep 1;
+#    }
+#}
 
 # plays the selected item or next/prev if given
 sub play {
@@ -338,13 +338,13 @@ sub play {
     print $Min "load $file\n";
     my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
     alarm($altime);
-    if (my $pid = fork()) { 
-        kill 'KILL', @KIDS;
-        push @KIDS, $pid;
-    }
-    else {
-        &play2progress($altime); 
-    }
+#   if (my $pid = fork()) { 
+#        kill 'KILL', @KIDS;
+#        push @KIDS, $pid;
+#    }
+#    else {
+#        &play2progress($altime); 
+#    }
 }
 
 # stop the current track, deactivate alarm
