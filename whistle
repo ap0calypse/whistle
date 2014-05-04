@@ -14,7 +14,7 @@ use Curses;
 # purpose:          see README
 
 # versions, data location, hashref declaratiion, global vars
-our $VERSION = '0.1';
+our $VERSION = '0.2';
 our $STORFILE = $ENV{'HOME'} . "/.whistle.dat";
 our $STORAGE;               # storage hashref
 our $SHUFFLE = 0;           # 0 = normal, 1 = random
