@@ -199,7 +199,8 @@ sub draw_menu {
     $curlist->values(sort {$a <=> $b} keys %pl);
     $curlist->labels(\%pl);
     $curlist->draw();
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
+                     "(B/b)(M/m)(H/h)");
     $equalizer->draw();
 }
 
@@ -464,42 +465,48 @@ sub del_from_pl {
 sub bass_up {
     $BASS += 0.2 unless $BASS > 5;
     print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
+                     "(B/b)(M/m)(H/h)");
     $equalizer->draw();
 }
 # set bass down
 sub bass_down {
     $BASS -= 0.2 unless $BASS < 0.21;
     print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
+                     "(B/b)(M/m)(H/h)");
     $equalizer->draw();
 }
 # set mids up
 sub mid_up {
     $MID += 0.2 unless $MID > 7;
     print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
+                     "(B/b)(M/m)(H/h)");
     $equalizer->draw();
 }
 # set mids down
 sub mid_down {
     $MID -= 0.2 unless $MID < 0.21;
     print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
+                     "(B/b)(M/m)(H/h)");
     $equalizer->draw();
 }
 # set highs up
 sub high_up {
     $HIGH += 0.2 unless $HIGH > 7;
     print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
+                     "(B/b)(M/m)(H/h)");
     $equalizer->draw();
 }
 # set highs down
 sub high_down {
     $HIGH -= 0.2 unless $HIGH < 0.21;
     print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
+                     "(B/b)(M/m)(H/h)");
     $equalizer->draw();
 }
 
