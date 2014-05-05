@@ -143,9 +143,13 @@ sub draw_menu {
     my $pltxt;
     $playlists->text('');
     $playlists->draw();
-    $pltxt .= "ALL\n";
-    for (sort keys %{$STORAGE->{'PLAYLIST'}}) {
-        $pltxt .= $_ eq 'ALL' ? "" : " \`-> $_\n";
+    $pltxt .= $CUR_LIST eq 'ALL' ? "[*] " : "[ ] ";
+    $pltxt .= "ALL";
+    $pltxt .= sprintf("  (%d)\n", scalar keys $STORAGE->{'PLAYLIST'}{'ALL'});
+    for (grep {!/ALL/} sort keys %{$STORAGE->{'PLAYLIST'}}) {
+        $pltxt .= $CUR_LIST eq $_ ? "[*] " : "[ ] ";
+        $pltxt .= "\'-> $_";
+        $pltxt .= sprintf("  (%d)\n", scalar keys $STORAGE->{'PLAYLIST'}{$_});
     }
     $playlists->text($pltxt);
     $playlists->draw();
