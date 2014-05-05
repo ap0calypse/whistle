@@ -52,20 +52,20 @@ my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle");
 my $curlist = $win->add( 
     'curlist', 'Listbox',
     -fg => 'white',
-    -multi => 1,
+    -multi => 0,
     -title => "Playlist: $CUR_LIST",
     -readonly => 1,
     -y => 1,
     -x => int ($win->width() / 4) + 5,
     -focusable => 1,
+    -nocursor => 0,
     -vscrollbar => 'right',
     -wrapping => 1,
-    -height => int ($win->height() * 0.9),
+    -height => int ($win->height() * 0.88),
     -width => int ($win->width() / 1.5),
     -intellidraw => 1,
     -border => 1,
     -ipad => 1,
-    -homeonblur => 0,
 ) or die "curlist";
 
 # create controls 'window'
@@ -117,6 +117,7 @@ my $directories = $win->add(
     -border => 1,
     -ipad => 1,
 ) or die "directories";
+<<<<<<< HEAD
 #my $progressbar = $win->add(
 #    'progressbar', 'Progressbar',
 #    -max       => 100,
@@ -129,6 +130,21 @@ my $directories = $win->add(
 #);
 
 #$progressbar->draw;
+=======
+
+my $progressbar = $win->add(
+        'progressbar', 'Progressbar',
+        -y => int($win->height() * 0.9),
+        -x => 1,
+    -width => int ($win->width() / 4),
+        -height => 2,
+        -pos => 0,
+        -max => 100,
+        -focusable => 0,
+        -nocursor => 1,
+        -intellidraw => 1,
+    );
+>>>>>>> devel
 # draw the menu
 sub draw_menu {
     $curlist->clear_selection();
@@ -287,6 +303,7 @@ sub del_pl {
     &draw_menu();
 }
 
+<<<<<<< HEAD
 #sub play2progress {
 #    my $MAXVAL = shift;
 #    my $subval = $MAXVAL;
@@ -298,6 +315,20 @@ sub del_pl {
 #        sleep 1;
 #    }
 #}
+=======
+sub play2progress {
+    my $MAXVAL = shift;
+    my $subval = $MAXVAL;
+    while ($subval > 0) {
+        sleep 1;
+        $subval--;
+        my $cur_pos = 100 - int($subval * (100/$MAXVAL));
+        $progressbar->pos($cur_pos);
+        $progressbar->draw();
+        #    $win->draw();
+    }
+}
+>>>>>>> devel
 
 # plays the selected item or next/prev if given
 sub play {
@@ -338,6 +369,7 @@ sub play {
     print $Min "load $file\n";
     my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
     alarm($altime);
+<<<<<<< HEAD
 #   if (my $pid = fork()) { 
 #        kill 'KILL', @KIDS;
 #        push @KIDS, $pid;
@@ -345,6 +377,16 @@ sub play {
 #    else {
 #        &play2progress($altime); 
 #    }
+=======
+    if (my $pid = fork()) { 
+        kill 'KILL', @KIDS;
+        push @KIDS, $pid;
+    }
+    else {
+        &play2progress($altime); 
+        exit(0);
+    }
+>>>>>>> devel
 }
 
 # stop the current track, deactivate alarm
