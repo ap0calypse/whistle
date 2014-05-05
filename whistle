@@ -43,7 +43,6 @@ else {
 
 # pretty nasty shit, but neccessary for continuous playing
 $SIG{ALRM} = sub { &play('NEXT'); };
-$SIG{CHLD} = 'IGNORE';
 
 # create the main ui and main window
 my $cui = new Curses::UI ( -clear_on_exit => 0, -color_support => 1);
@@ -53,7 +52,7 @@ my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle");
 my $curlist = $win->add( 
     'curlist', 'Listbox',
     -fg => 'white',
-    -multi => 0,
+    -multi => 1,
     -title => "Playlist: $CUR_LIST",
     -readonly => 1,
     -y => 1,
@@ -118,19 +117,6 @@ my $directories = $win->add(
     -border => 1,
     -ipad => 1,
 ) or die "directories";
-
-my $progressbar = $win->add(
-        'progressbar', 'Progressbar',
-        -y => int($win->height() * 0.9),
-        -x => 1,
-    -width => int ($win->width() / 4),
-        -height => 2,
-        -pos => 0,
-        -max => 100,
-        -focusable => 0,
-        -nocursor => 1,
-        -intellidraw => 1,
-    );
 
 # draw the menu
 sub draw_menu {
@@ -198,12 +184,10 @@ sub store_data {
 }
 
 
-our @KIDS;
 # quit the program, close filehandles, store data
 sub quit_program {
     close $Min;
     close $Mout;
-    kill 'KILL', @KIDS;
     store_data();
     $cui->exit_curses();
     exit(0);
@@ -290,19 +274,6 @@ sub del_pl {
     &draw_menu();
 }
 
-sub play2progress {
-    my $MAXVAL = shift;
-    my $subval = $MAXVAL;
-    while ($subval > 0) {
-        sleep 1;
-        $subval--;
-        my $cur_pos = 100 - int($subval * (100/$MAXVAL));
-        $progressbar->pos($cur_pos);
-        $progressbar->draw();
-        #    $win->draw();
-    }
-}
-
 # plays the selected item or next/prev if given
 sub play {
     print $Min "silence\n";
@@ -342,19 +313,10 @@ sub play {
     print $Min "load $file\n";
     my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
     alarm($altime);
-    if (my $pid = fork()) { 
-        kill 'KILL', @KIDS;
-        push @KIDS, $pid;
-    }
-    else {
-        &play2progress($altime); 
-        exit(0);
-    }
 }
 
 # stop the current track, deactivate alarm
 sub stop {
-    kill 'KILL', @KIDS;
     print $Min "s\n";
     $curlist->title("Playlist: $CUR_LIST :: STOPPED");
     $curlist->draw();
