@@ -20,6 +20,8 @@ our $SHUFFLE = 0;           # 0 = normal, 1 = random
 our $CUR_LIST = 'ALL';      # current playlist
 our $LAST_PLAYED = 0;
 
+our ($BASS, $MID, $HIGH) = (1.0, 1.0, 1.0);
+
 my ($dir_add, $dir_rem, $pl_add, $pl_del, $sel_pl);
 my $num_songs = 0;
 our $MAX_PL;
@@ -94,7 +96,7 @@ my $playlists = $win->add(
     -x => 1,
     -focusable => 0,
     -wrapping => 1,
-    -height => int ($win->height() / 2.5),
+    -height => int ($win->height() / 4),
     -width => int ($win->width() / 4),
     -intellidraw => 1,
     -border => 1,
@@ -107,16 +109,32 @@ my $directories = $win->add(
     -fg => 'white',
     -title => ".:Directories:.",
     -readonly => 1,
-    -y => int($win->height() * 0.7),
+    -y => int($win->height() * 0.55),
     -x => 1,
     -focusable => 0,
     -wrapping => 1,
-    -height => int ($win->height() / 5),
+    -height => int ($win->height() / 6),
     -width => int ($win->width() / 4),
     -intellidraw => 1,
     -border => 1,
     -ipad => 1,
 ) or die "directories";
+
+my $equalizer = $win->add( 
+    'equalizer', 'TextViewer',
+    -fg => 'white',
+    -title => ".:Equalizer:.",
+    -readonly => 1,
+    -y => int($win->height() * 0.72),
+    -x => 1,
+    -focusable => 0,
+    -wrapping => 1,
+    -height => int ($win->height() / 6),
+    -width => int ($win->width() / 4),
+    -intellidraw => 1,
+    -border => 1,
+    -ipad => 1,
+) or die "equalizer";
 
 # draw the menu
 sub draw_menu {
@@ -181,6 +199,8 @@ sub draw_menu {
     $curlist->values(sort {$a <=> $b} keys %pl);
     $curlist->labels(\%pl);
     $curlist->draw();
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->draw();
 }
 
 # store the storage hashref to .whistle.dat
@@ -440,6 +460,50 @@ sub del_from_pl {
     &draw_menu();    
 }
 
+# set bass up
+sub bass_up {
+    $BASS += 0.2 unless $BASS > 5;
+    print $Min "seq $BASS $MID $HIGH\n";
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->draw();
+}
+# set bass down
+sub bass_down {
+    $BASS -= 0.2 unless $BASS < 0.21;
+    print $Min "seq $BASS $MID $HIGH\n";
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->draw();
+}
+# set mids up
+sub mid_up {
+    $MID += 0.2 unless $MID > 7;
+    print $Min "seq $BASS $MID $HIGH\n";
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->draw();
+}
+# set mids down
+sub mid_down {
+    $MID -= 0.2 unless $MID < 0.21;
+    print $Min "seq $BASS $MID $HIGH\n";
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->draw();
+}
+# set highs up
+sub high_up {
+    $HIGH += 0.2 unless $HIGH > 7;
+    print $Min "seq $BASS $MID $HIGH\n";
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->draw();
+}
+# set highs down
+sub high_down {
+    $HIGH -= 0.2 unless $HIGH < 0.21;
+    print $Min "seq $BASS $MID $HIGH\n";
+    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH));
+    $equalizer->draw();
+}
+
+
 # define keybindings, draw menu for first time, start main loop :)
 $cui->set_binding(\&quit_program, "Q");
 $cui->set_binding(\&add_dir, "A");
@@ -458,5 +522,11 @@ $cui->set_binding(\&stop, "S" );
 $cui->set_binding(\&rescan_dirs, "e" );
 $cui->set_binding(\&seek_right, KEY_RIGHT );
 $cui->set_binding(\&seek_left, KEY_LEFT );
+$cui->set_binding(\&bass_up, "B" );
+$cui->set_binding(\&bass_down, "b" );
+$cui->set_binding(\&mid_up, "M" );
+$cui->set_binding(\&mid_down, "m" );
+$cui->set_binding(\&high_up, "H" );
+$cui->set_binding(\&high_down, "h" );
 &draw_menu();
 $cui->mainloop();
