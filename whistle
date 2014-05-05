@@ -143,8 +143,9 @@ sub draw_menu {
     my $pltxt;
     $playlists->text('');
     $playlists->draw();
+    $pltxt .= "ALL\n";
     for (sort keys %{$STORAGE->{'PLAYLIST'}}) {
-        $pltxt .= $_ eq 'ALL' ? "$_\n" : " \`-> $_\n";
+        $pltxt .= $_ eq 'ALL' ? "" : " \`-> $_\n";
     }
     $playlists->text($pltxt);
     $playlists->draw();
