@@ -13,11 +13,13 @@ Programs:
         - mpg123
 
 
-What works?
------------
+What works? a.k.a. Features:
+----------------------------
 
         - full MP3 play/stop/next/prev/seek/shuffle support
-        - playlists 
+        - playlists
+        - multi-select for playlist-editing
+        - simple bass/mid/treb settings
 
 
 What's to come?
@@ -25,7 +27,8 @@ What's to come?
 
         - a lot of bugfixes for sure
         - mp3 tag write support
-        - (equalizer?)
+        - burn playlist 2 iso or cd
+        - a working progress-bar
         - ...
         - your feature request?
 
