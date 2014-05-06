@@ -332,12 +332,12 @@ sub play {
         $LAST_PLAYED = $index;
     }
     my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
-    my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'};
-    my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'};
+    my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'} || '';
+    my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'} || '';
     $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
     $curlist->draw();
     print $Min "load $file\n";
-    my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'};
+    my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'} || '0';
     alarm($altime);
 }
 
