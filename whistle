@@ -68,6 +68,7 @@ my $curlist = $win->add(
     -intellidraw => 1,
     -border => 1,
     -ipad => 1,
+    -htmltext => 1,
 ) or die "curlist";
 
 # create controls 'window'
@@ -309,24 +310,27 @@ sub play {
     my $next = shift || '';
     my ($index, $cur);
     if ($next eq 'NEXT') {
-        $LAST_PLAYED = (($curlist->id())[0] || 0);
-        $index = $SHUFFLE ? int(rand($MAX_PL)) : (($curlist->id())[0] || 0) + 1;
+        $LAST_PLAYED = (($curlist->id())[0] || $LAST_PLAYED);
+        $index = $SHUFFLE ? int(rand($MAX_PL)) : (($curlist->id())[0] || $LAST_PLAYED) + 1;
+        $LAST_PLAYED = $index;
         $index = $index > $MAX_PL ? 0 : $index;
         $curlist->clear_selection();
         $curlist->set_selection($index);
         $cur = ($curlist->get())[0];
     }
     elsif ($next eq 'PREV') {
-        $index = $SHUFFLE ? int(rand($MAX_PL)) : (($curlist->id())[0] || 0) - 1;
+        $index = $SHUFFLE ? int(rand($MAX_PL)) : (($curlist->id())[0] || $LAST_PLAYED) - 1;
+        $LAST_PLAYED = $index;
         $index = $index < 0 ? $MAX_PL : $index;
         $curlist->clear_selection();
         $curlist->set_selection(($LAST_PLAYED && $SHUFFLE) ? $LAST_PLAYED : $index);
         $cur = ($curlist->get())[0];
-        $LAST_PLAYED = ($curlist->id())[0] || 0;
+        $LAST_PLAYED = ($curlist->id())[0] || $LAST_PLAYED;
     }
     else {
-        $cur = ($curlist->get())[0] || '0';
         $index = ($curlist->id())[0] || '0';
+        $curlist->set_selection($index);
+        $cur = ($curlist->get())[0];
         $curlist->clear_selection();
         $curlist->set_selection($index);
         $LAST_PLAYED = $index;
@@ -335,6 +339,7 @@ sub play {
     my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'} || '';
     my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'} || '';
     $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
+    $curlist->clear_selection();
     $curlist->draw();
     print $Min "load $file\n";
     my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'} || '0';
