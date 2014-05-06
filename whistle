@@ -463,7 +463,7 @@ sub del_from_pl {
 
 # set bass up
 sub bass_up {
-    $BASS += 0.2 unless $BASS > 5;
+    $BASS += 0.1 unless $BASS > 7;
     print $Min "seq $BASS $MID $HIGH\n";
     $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
                      "(B/b)(M/m)(H/h)");
@@ -471,7 +471,7 @@ sub bass_up {
 }
 # set bass down
 sub bass_down {
-    $BASS -= 0.2 unless $BASS < 0.21;
+    $BASS -= 0.1 unless $BASS < 0.11;
     print $Min "seq $BASS $MID $HIGH\n";
     $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
                      "(B/b)(M/m)(H/h)");
@@ -479,7 +479,7 @@ sub bass_down {
 }
 # set mids up
 sub mid_up {
-    $MID += 0.2 unless $MID > 7;
+    $MID += 0.1 unless $MID > 7;
     print $Min "seq $BASS $MID $HIGH\n";
     $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
                      "(B/b)(M/m)(H/h)");
@@ -487,7 +487,7 @@ sub mid_up {
 }
 # set mids down
 sub mid_down {
-    $MID -= 0.2 unless $MID < 0.21;
+    $MID -= 0.1 unless $MID < 0.11;
     print $Min "seq $BASS $MID $HIGH\n";
     $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
                      "(B/b)(M/m)(H/h)");
@@ -495,7 +495,7 @@ sub mid_down {
 }
 # set highs up
 sub high_up {
-    $HIGH += 0.2 unless $HIGH > 7;
+    $HIGH += 0.1 unless $HIGH > 7;
     print $Min "seq $BASS $MID $HIGH\n";
     $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
                      "(B/b)(M/m)(H/h)");
@@ -503,7 +503,7 @@ sub high_up {
 }
 # set highs down
 sub high_down {
-    $HIGH -= 0.2 unless $HIGH < 0.21;
+    $HIGH -= 0.1 unless $HIGH < 0.11;
     print $Min "seq $BASS $MID $HIGH\n";
     $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
                      "(B/b)(M/m)(H/h)");
