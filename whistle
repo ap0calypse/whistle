@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use Curses::UI;
@@ -30,9 +30,13 @@ our $STATE = 0;
 # turn on autoflush
 $| = 1;
 
+# don't hard code mpg123 location
+open( my $WHICH, "which mpg123 2>/dev/null |" );
+chomp( my( $mpg123 ) = <$WHICH> );
+close( $WHICH );
 
 # open read and write handles for mpg123
-open2(my $Mout, my $Min, "/usr/bin/mpg123 -R") or die "mpg123 hates me :(";
+open2(my $Mout, my $Min, "$mpg123 -R") or die "mpg123 hates me :(";
 
 # read in data if available, otherwise initialise STORAGE hashref
 if (-e $STORFILE && (stat $STORFILE)[7] > 5) {
