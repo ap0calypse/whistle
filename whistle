@@ -342,12 +342,19 @@ sub play {
     my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'filename'};
     my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'title'} || '';
     my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'artist'} || '';
-    $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
-    $curlist->clear_selection();
-    $curlist->draw();
-    print $Min "load $file\n";
-    my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'} || '0';
-    alarm($altime);
+    if ($file) {
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
+        $curlist->clear_selection();
+        $curlist->draw();
+        print $Min "load $file\n";
+        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$cur}{'duration_s'} || '0';
+        alarm($altime);
+    }
+    else {
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: ERROR - Could not find file for position $cur");
+        $curlist->clear_selection();
+        $curlist->draw();
+    }
 }
 
 # stop the current track, deactivate alarm
