@@ -186,8 +186,15 @@ sub draw_menu {
     $pl_a = "$pl_a.$pl_a" . "s";
     $pl_al = "$pl_al.$pl_al" . "s";
     $pl_d = "$pl_d.$pl_d" . "s";
+    my @md5list;
     if (%{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
         for (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
+            $md5list[$STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'fileno'}] = $_;
+        }
+    }
+
+    if (%{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
+        for (@md5list) {
             if (defined $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}) {
                 my $full_line = sprintf(" %$pl_t | %$pl_a | %$pl_al | %$pl_d",  $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}, 
                                                       $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'artist'}, 
