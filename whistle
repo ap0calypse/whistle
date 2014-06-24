@@ -187,6 +187,7 @@ sub draw_menu {
     $pl_al = "$pl_al.$pl_al" . "s";
     $pl_d = "$pl_d.$pl_d" . "s";
     my @md5list;
+    $md5list[$_] = '' for 0 .. $num_songs;
     if (%{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
         for (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
             $md5list[$STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'fileno'}] = $_;
