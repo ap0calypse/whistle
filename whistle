@@ -313,7 +313,7 @@ sub play {
     print $Min "silence\n";
     print $Min "s\n";
     $MAX_PL = (scalar (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})) - 1;
-    return if $MAX_PL < 1;
+    return if $MAX_PL < 0;
     my $next = shift || '';
     my ($index, $cur);
     if ($next eq 'NEXT') {
@@ -335,7 +335,7 @@ sub play {
         $LAST_PLAYED = ($curlist->id())[0] || $LAST_PLAYED;
     }
     else {
-        $index = ($curlist->id())[0] || '1';
+        $index = ($curlist->id())[0] || '0';
         $curlist->set_selection($index);
         $cur = ($curlist->get())[0];
         $curlist->clear_selection();
