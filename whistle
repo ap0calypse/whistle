@@ -8,6 +8,7 @@ use File::Find;
 use IPC::Open2;
 use Curses qw(KEY_LEFT KEY_RIGHT);
 use File::MimeInfo qw(mimetype describe);
+use Digest::MD5 qw(md5_hex);
 
 # project:          whistle
 # author:           see AUTHORS
@@ -186,7 +187,7 @@ sub draw_menu {
     $pl_al = "$pl_al.$pl_al" . "s";
     $pl_d = "$pl_d.$pl_d" . "s";
     if (%{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
-        for (sort keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
+        for (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
             if (defined $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}) {
                 my $full_line = sprintf(" %$pl_t | %$pl_a | %$pl_al | %$pl_d",  $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}, 
                                                       $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'artist'}, 
@@ -195,14 +196,16 @@ sub draw_menu {
                 $pl{$_} = $full_line;
             }
         }
-        for (sort {$a <=> $b } keys %pl) {
-            $curlist->insert_at($_, $pl{$_});
+        my $i = 0;
+        for (keys %pl) {
+            $curlist->insert_at($i, $pl{$_});
+            $i++;
         }
     }
     else {
         $curlist->values("no files found, please add a music directory");
     }
-    $curlist->values(sort {$a <=> $b} keys %pl);
+    $curlist->values(keys %pl);
     $curlist->labels(\%pl);
     $curlist->draw();
     $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
@@ -230,15 +233,17 @@ sub found_mp3 {
     my $mime = mimetype($File::Find::name);
     my $mime_long = describe($mime);
     if ($mime_long =~ m/.*MP3 audio.*/) {
+        my $md5sum = md5_hex($File::Find::name);
         my $taghash = get_mp3tag($File::Find::name);
         my $infohash = get_mp3info($File::Find::name);
-        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'filename'} = $File::Find::name;
-        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'artist'} = $taghash->{ARTIST} || "N/A";
-        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'album'} = $taghash->{ALBUM} || "N/A";
-        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'title'} = $taghash->{TITLE} || "N/A";
-        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'duration'} = sprintf("%02d:%02d", 
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'filename'} = $File::Find::name;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'fileno'} = $num_songs;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'artist'} = $taghash->{ARTIST} || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'album'} = $taghash->{ALBUM} || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'title'} = $taghash->{TITLE} || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration'} = sprintf("%02d:%02d", 
                                                                         $infohash->{MM} || 0, $infohash->{SS} || 0);
-        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'duration_s'} = sprintf("%d", ($infohash->{MM} || 0) * 60 + ($infohash->{SS} || 0));
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = sprintf("%d", ($infohash->{MM} || 0) * 60 + ($infohash->{SS} || 0));
         $num_songs++;
     }
 }
