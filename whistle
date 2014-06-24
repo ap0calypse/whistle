@@ -7,6 +7,7 @@ use Storable qw(nstore retrieve);
 use File::Find;
 use IPC::Open2;
 use Curses qw(KEY_LEFT KEY_RIGHT);
+use File::MimeInfo qw(mimetype describe);
 
 # project:          whistle
 # author:           see AUTHORS
@@ -226,13 +227,15 @@ sub quit_program {
 
 # find-function for found mp3's. writes returned data to storage hashref
 sub found_mp3 {
-    if ($_ =~ m/.+\.(mp3|MP3)$/) {
+    my $mime = mimetype($File::Find::name);
+    my $mime_long = describe($mime);
+    if ($mime_long =~ m/.*MP3 audio.*/) {
         my $taghash = get_mp3tag($File::Find::name);
         my $infohash = get_mp3info($File::Find::name);
         $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'filename'} = $File::Find::name;
         $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'artist'} = $taghash->{ARTIST} || "N/A";
         $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'album'} = $taghash->{ALBUM} || "N/A";
-        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'title'} = $taghash->{TITLE} || $_;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'title'} = $taghash->{TITLE} || "N/A";
         $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'duration'} = sprintf("%02d:%02d", 
                                                                         $infohash->{MM} || 0, $infohash->{SS} || 0);
         $STORAGE->{'PLAYLIST'}{'ALL'}{$num_songs}{'duration_s'} = sprintf("%d", ($infohash->{MM} || 0) * 60 + ($infohash->{SS} || 0));

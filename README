@@ -5,8 +5,9 @@ Prerequisites:
 
 Perl Modules:
     
-        - MP3::Info     (archlinux-package: perl-mp3-info)
-        - Curses::UI    (archlinux-package: perl-curses-ui)
+        - MP3::Info      (archlinux-package: perl-mp3-info)
+        - Curses::UI     (archlinux-package: perl-curses-ui)
+        - File::MimeInfo (archlinux-package: perl-file-mimeinfo)
 
 Programs:
 
