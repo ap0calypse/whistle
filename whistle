@@ -332,7 +332,7 @@ sub play {
         $LAST_PLAYED = ($curlist->id())[0] || $LAST_PLAYED;
     }
     else {
-        $index = ($curlist->id())[0] || '0';
+        $index = ($curlist->id())[0] || '1';
         $curlist->set_selection($index);
         $cur = ($curlist->get())[0];
         $curlist->clear_selection();
