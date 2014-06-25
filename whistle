@@ -9,7 +9,6 @@ use IPC::Open2;
 use Curses qw(KEY_LEFT KEY_RIGHT);
 use File::MimeInfo qw(mimetype describe);
 use Digest::MD5 qw(md5_hex);
-use Data::Dumper;
 
 # project:          whistle
 # author:           see AUTHORS
@@ -22,7 +21,6 @@ our $STORAGE;               # storage hashref
 our $SHUFFLE = 0;           # 0 = normal, 1 = random
 our $CUR_LIST = 'ALL';      # current playlist
 our $LAST_PLAYED = 0;
-
 our $real_order;
 
 our ($BASS, $MID, $HIGH) = (1.0, 1.0, 1.0);
