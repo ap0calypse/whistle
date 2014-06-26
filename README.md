@@ -60,6 +60,8 @@ Thanks:
  - all developers from Curses and Curses::UI
  - all developers from MP3::Info
  
- <script data-gittip-username="ap0calypse"
-        data-gittip-widget="button"
-        src="//gttp.co/v1.js"></script>
+
+
+If you really like this tool, feel free to tip me via [Gittip][tip].
+
+[![Gittip](http://img.shields.io/gittip/ap0calypse.svg)](https://www.gittip.com/ap0calypse/)
