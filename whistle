@@ -52,8 +52,6 @@ else {
     $STORAGE->{'real_order'} = {};
 }
 
-# pretty nasty shit, but neccessary for continuous playing
-$SIG{ALRM} = sub { &play('NEXT'); };
 
 # create the main ui and main window
 my $cui = new Curses::UI ( -clear_on_exit => 0, -color_support => 1);
@@ -119,7 +117,7 @@ my $directories = $win->add(
     -fg => 'white',
     -title => ".:Directories:.",
     -readonly => 1,
-    -y => int($win->height() * 0.55),
+    -y => int($win->height() * 0.52),
     -x => 1,
     -focusable => 0,
     -wrapping => 1,
@@ -135,16 +133,46 @@ my $equalizer = $win->add(
     -fg => 'white',
     -title => ".:Equalizer:.",
     -readonly => 1,
-    -y => int($win->height() * 0.72),
+    -y => int($win->height() * 0.7),
     -x => 1,
     -focusable => 0,
     -wrapping => 1,
-    -height => int ($win->height() / 6),
+    -height => int ($win->height() / 7),
     -width => int ($win->width() / 4),
     -intellidraw => 1,
     -border => 1,
     -ipad => 1,
 ) or die "equalizer";
+
+my $progressbar = $win->add(
+    'progress', 'Progressbar',
+    -max       => 100,
+    -pos       => 0,
+    -y => int($win->height() * 0.85),
+    -x => 1,
+    -focusable => 0,
+    -wrapping => 1,
+    -height => 3,
+    -width => int ($win->width() / 4),
+    -intellidraw => 1,
+    -border => 1,
+) or die "progressbar";
+
+# pretty nasty shit, but neccessary for continuous playing
+our $TIMER = {'rest_time' => 0, 'max_time' => 0};
+$SIG{ALRM} = sub { 
+    $TIMER->{'rest_time'}--;
+    my $one_perc = $TIMER->{'max_time'} / 100;
+    my $new_pro = int(($TIMER->{'max_time'} - $TIMER->{'rest_time'}) / $one_perc);
+    $progressbar->pos($new_pro);
+    $progressbar->draw();
+    if ($TIMER->{'rest_time'} <= 0) {
+        &play('NEXT'); 
+    }
+    else {
+        alarm(1);
+    }
+};
 
 # draw the menu
 sub draw_menu {
@@ -213,6 +241,7 @@ sub draw_menu {
     $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
                      "(B/b)(M/m)(H/h)");
     $equalizer->draw();
+    $progressbar->draw();
 }
 
 # store the storage hashref to .whistle.dat
@@ -359,7 +388,9 @@ sub play {
         $curlist->draw();
         print $Min "load $file\n";
         my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'duration_s'} || '0';
-        alarm($altime);
+        $TIMER->{'rest_time'} = $altime;
+        $TIMER->{'max_time'} = $altime;
+        alarm(1);
     }
     else {
         $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: ERROR - Could not find file for position $cur");
@@ -385,7 +416,8 @@ sub pause {
         $rest_altime = alarm(0);
     }
     else {
-        alarm($rest_altime);
+        $TIMER->{'rest_time'} = $rest_altime;
+        alarm(1);
     }
 }
 
@@ -456,25 +488,22 @@ sub toggle_shuffle { $SHUFFLE = $SHUFFLE ? 0 : 1; $curlist->draw();}
 # seek 10 seconds forward in music stream
 sub seek_right {
     print $Min "J +10s\n";
-    my $newal = alarm(0);
+    my $newal = $TIMER->{'rest_time'};
     if ($newal > 10) {
         $newal -= 10 ;
     }
     else { $newal = 1; }
-    alarm($newal);
+    $TIMER->{'rest_time'} = $newal;
 }
 
 # seek 10 seconds back in music stream
 sub seek_left {
-    my $newal = alarm(0);
+    my $newal = $TIMER->{'rest_time'};
     if ($newal > 10) {
         print $Min "J -10s\n";
         $newal += 10;
-        alarm($newal);
     }
-    else {
-        alarm($newal);
-    }
+    $TIMER->{'rest_time'} = $newal;
 }
 
 # delete the currently selected item from the currently selected playlist

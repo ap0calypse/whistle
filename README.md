@@ -18,6 +18,7 @@ What works? a.k.a. Features:
 ----------------------------
 
         - full MP3 play/stop/next/prev/seek/shuffle support
+        - progressbar
         - playlists
         - multi-select for playlist-editing
         - simple bass/mid/treb settings
@@ -29,7 +30,6 @@ What's to come?
         - a lot of bugfixes for sure
         - mp3 tag write support
         - burn playlist 2 iso or cd
-        - a working progress-bar
         - ...
         - your feature request?
 
