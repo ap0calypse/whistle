@@ -413,7 +413,8 @@ sub pause {
     print $Min "p\n";
     $STATE = $STATE ? 0 : 1;
     if ($STATE == 1) {
-        $rest_altime = alarm(0);
+        $rest_altime = $TIMER->{'rest_time'};
+        alarm(0);
     }
     else {
         $TIMER->{'rest_time'} = $rest_altime;
