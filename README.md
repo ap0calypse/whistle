@@ -11,7 +11,7 @@ Perl Modules:
 
 Programs:
 
-        - mpg123
+        - mpg123 (soon mplayer maybe?)
 
 
 What works? a.k.a. Features:
@@ -28,6 +28,11 @@ What's to come?
 ---------------
 
         - a lot of bugfixes for sure
+        - support for various formats
+        - better and finer granulated equalizer
+        - color support
+        - tab completition
+        - better management of screen space
         - mp3 tag write support
         - burn playlist 2 iso or cd
         - ...
