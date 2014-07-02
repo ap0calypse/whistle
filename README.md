@@ -60,7 +60,8 @@ based on. Without mpg123, there would be no whistle.
 
 Thanks:
 -------
-
+ - all the people testing and helping me to improve whistle :)
+   (kmandla, matthew cox, smiszym, ...)
  - all developers behind mpg123
  - all developers from Curses and Curses::UI
  - all developers from MP3::Info
