@@ -33,13 +33,13 @@ our $STATE = 0;
 # turn on autoflush
 $| = 1;
 
-# don't hard code mpg123 location
-open( my $WHICH, "which mpg123 2>/dev/null |" );
-chomp( my( $mpg123 ) = <$WHICH> );
+# don't hard code mplayer location
+open( my $WHICH, "which mplayer 2>/dev/null |" );
+chomp( my( $mplayer ) = <$WHICH> );
 close( $WHICH );
 
-# open read and write handles for mpg123
-open2(my $Mout, my $Min, "$mpg123 -R") or die "mpg123 hates me :(";
+# open read and write handles for mpv
+my $MPLPID = open2(my $Mout, my $Min, "$mplayer -idle -slave &> /dev/null") or die "mplayer hates me :(";
 
 # read in data if available, otherwise initialise STORAGE hashref
 if (-e $STORFILE && (stat $STORFILE)[7] > 5) {
@@ -235,9 +235,9 @@ sub draw_menu {
     $curlist->values(sort keys %pl);
     $curlist->labels(\%pl);
     $curlist->draw();
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
-                     "(B/b)(M/m)(H/h)");
-    $equalizer->draw();
+#    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
+#                     "(B/b)(M/m)(H/h)");
+#    $equalizer->draw();
     $progressbar->draw();
 }
 
@@ -250,8 +250,10 @@ sub store_data {
 
 # quit the program, close filehandles, store data
 sub quit_program {
+    print $Min "quit\n";
     close $Min;
     close $Mout;
+    kill $MPLPID;
     store_data();
     $cui->exit_curses();
     exit(0);
@@ -266,7 +268,9 @@ sub found_mp3 {
         $real_order->{'ALL'}{$num_songs} = $md5sum; 
         my $taghash = get_mp3tag($File::Find::name);
         my $infohash = get_mp3info($File::Find::name);
-        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'filename'} = $File::Find::name;
+        my $esc_name = $File::Find::name;
+        $esc_name =~ s/ /\\ /g;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'filename'} = $esc_name;
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'artist'} = $taghash->{ARTIST} || "N/A";
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'album'} = $taghash->{ALBUM} || "N/A";
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'title'} = $taghash->{TITLE} || "N/A";
@@ -344,8 +348,7 @@ sub del_pl {
 
 # plays the selected item or next/prev if given
 sub play {
-    print $Min "silence\n";
-    print $Min "s\n";
+    print $Min "stop\n";
     $MAX_PL = (scalar (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})) - 1;
     return if $MAX_PL < 0;
     my $next = shift || '';
@@ -383,7 +386,10 @@ sub play {
         $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
         $curlist->clear_selection();
         $curlist->draw();
-        print $Min "load $file\n";
+        print $Min "loadfile $file\n";
+        open my $GNA, ">> /tmp/gna.txt";
+        print $GNA "loadfile $file\n";
+        close $GNA;
         my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'duration_s'} || '0';
         $TIMER->{'rest_time'} = $altime;
         $TIMER->{'max_time'} = $altime;
@@ -398,7 +404,7 @@ sub play {
 
 # stop the current track, deactivate alarm
 sub stop {
-    print $Min "s\n";
+    print $Min "stop\n";
     $curlist->title("Playlist: $CUR_LIST :: STOPPED");
     $curlist->draw();
     alarm(0);
@@ -407,7 +413,7 @@ sub stop {
 # pause the track, save alarm time, restart alarm if unpaused
 our $rest_altime;
 sub pause {
-    print $Min "p\n";
+    print $Min "pause\n";
     $STATE = $STATE ? 0 : 1;
     if ($STATE == 1) {
         $rest_altime = $TIMER->{'rest_time'};
@@ -485,7 +491,7 @@ sub toggle_shuffle { $SHUFFLE = $SHUFFLE ? 0 : 1; $curlist->draw();}
 
 # seek 10 seconds forward in music stream
 sub seek_right {
-    print $Min "J +10s\n";
+    print $Min "seek 10\n";
     my $newal = $TIMER->{'rest_time'};
     if ($newal > 10) {
         $newal -= 10 ;
@@ -498,7 +504,7 @@ sub seek_right {
 sub seek_left {
     my $newal = $TIMER->{'rest_time'};
     if ($newal > 10) {
-        print $Min "J -10s\n";
+        print $Min "seek -10\n";
         $newal += 10;
     }
     $TIMER->{'rest_time'} = $newal;
