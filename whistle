@@ -27,7 +27,7 @@ our $real_order;
 # vars for mplayer's 10band equalizer (allowed: -12 <-> 12)
 our @EQ = (0,0,0,0,0,0,0,0,0,0);
 
-my ($dir_add, $dir_rem, $pl_add, $pl_del, $sel_pl);
+my ($dir_rem, $pl_add, $pl_del, $sel_pl);
 my $num_songs = 0;
 our $MAX_PL;
 our $STATE = 0;
@@ -286,10 +286,10 @@ sub found_mp3 {
 # func: add_dir
 # adds a new directory to the STORAGE hashref.
 sub add_dir {
-    $dir_add = $cui->question('Please enter the path to your music directory');
-    if (defined $dir_add && -d $dir_add && length $dir_add) {
-        unless (grep {/^$dir_add$/} @{$STORAGE->{'DIRS'}}) {
-            push @{$STORAGE->{'DIRS'}}, $dir_add;
+    my $file = $cui->dirbrowser();
+    if (defined $file && -d $file && length $file) {
+        unless (grep {/^$file$/} @{$STORAGE->{'DIRS'}}) {
+            push @{$STORAGE->{'DIRS'}}, $file;
             &rescan_dirs();
         }
     }
@@ -648,7 +648,7 @@ sub help {
                  "Q - Quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
                  "s - switch to playlist\n" . "A - Add directory\n" . "R - Remove directory\n" .
                  "N - New playlist\n" . "D - Delete playlist\n\n" .
-                 "SPACE or ENTER to select, TAB to confirm -  LEFT / RIGHT Arrow Key seek +-10s"
+                 "SPACE or ENTER to select, TAB to confirm\nLEFT / RIGHT Arrow Key seek +-10s"
     );
 }
 
