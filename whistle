@@ -6,7 +6,7 @@ use MP3::Info;
 use Storable qw(nstore retrieve);
 use File::Find;
 use IPC::Open2;
-use Curses qw(KEY_LEFT KEY_RIGHT KEY_F);
+use Curses qw(KEY_LEFT KEY_RIGHT KEY_F getmaxyx initscr endwin);
 use File::MimeInfo qw(mimetype describe);
 use Digest::MD5 qw(md5_hex);
 
@@ -53,11 +53,17 @@ else {
     $STORAGE->{'PLAYLIST'}{'ALL'} = {};
     $STORAGE->{'real_order'} = {};
 }
+initscr();
 
-
+my ( $row, $col );
+getmaxyx( $row, $col );
+endwin();
+print "your terminal windows' height is too low! (26 rows needed)\n" and exit(0) if $row < 26;
+print "your terminal windows' length is too low! (100 cols needed)\n" and exit(0) if $col < 100;
 # create the main ui and main window
 my $cui = new Curses::UI ( -clear_on_exit => 0, -color_support => 1);
 my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle");
+
 
 # create current playlist 'window'
 my $curlist = $win->add( 
