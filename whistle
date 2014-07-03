@@ -6,7 +6,7 @@ use MP3::Info;
 use Storable qw(nstore retrieve);
 use File::Find;
 use IPC::Open2;
-use Curses qw(KEY_LEFT KEY_RIGHT);
+use Curses qw(KEY_LEFT KEY_RIGHT KEY_F);
 use File::MimeInfo qw(mimetype describe);
 use Digest::MD5 qw(md5_hex);
 
@@ -23,7 +23,8 @@ our $CUR_LIST = 'ALL';      # current playlist
 our $LAST_PLAYED = 0;
 our $real_order;
 
-our ($BASS, $MID, $HIGH) = (1.0, 1.0, 1.0);
+# vars for mplayer's 10band equalizer (allowed: -12 <-> 12)
+our @EQ = (0,0,0,0,0,0,0,0,0,0);
 
 my ($dir_add, $dir_rem, $pl_add, $pl_del, $sel_pl);
 my $num_songs = 0;
@@ -40,6 +41,7 @@ close( $WHICH );
 
 # open read and write handles for mpv
 my $MPLPID = open2(my $Mout, my $Min, "$mplayer -idle -slave &> /dev/null") or die "mplayer hates me :(";
+
 
 # read in data if available, otherwise initialise STORAGE hashref
 if (-e $STORFILE && (stat $STORFILE)[7] > 5) {
@@ -64,14 +66,13 @@ my $curlist = $win->add(
     -multi => 1,
     -title => "Playlist: $CUR_LIST",
     -readonly => 1,
-    -y => 7,
-    -x => int ($win->width() / 4) + 5,
+    -y => 5,
+    -x => int ($win->width() / 3) + 1,
     -focusable => 1,
     -nocursor => 0,
     -vscrollbar => 'right',
     -wrapping => 1,
-    -height => int ($win->height() * 0.75),
-    -width => int ($win->width() / 1.45),
+    -width => int ($win->width() * 0.66),
     -intellidraw => 1,
     -border => 1,
     -ipad => 1,
@@ -79,17 +80,17 @@ my $curlist = $win->add(
 ) or die "curlist";
 
 # create controls 'window'
-my $controls = $win->add( 
+my $equalizer = $win->add( 
     'controls', 'TextViewer',
     -fg => 'white',
-    -title => ".:Controls:.",
+    -title => ".: Equalizer :. (Use F1-F10 to configure)",
     -readonly => 1,
     -y => 1,
     -x => 1,
     -focusable => 0,
     -wrapping => 0,
-    -height => 5,
-    -width => int ($win->width() - 5),
+    -height => 4,
+    -width => int ($win->width() / 2),
     -intellidraw => 1,
     -border => 1,
 ) or die "controls";
@@ -98,14 +99,14 @@ my $controls = $win->add(
 my $playlists = $win->add( 
     'playlists', 'TextViewer',
     -fg => 'white',
-    -title => ".:Playlists:.",
+    -title => ".: Playlists :. ('h' -> help)",
     -readonly => 1,
-    -y => 7,
+    -y => 5,
     -x => 1,
     -focusable => 0,
     -wrapping => 1,
-    -height => 10,
-    -width => int ($win->width() / 4),
+    -height => 14,
+    -width => int ($win->width() / 3),
     -intellidraw => 1,
     -border => 1,
     -ipad => 1,
@@ -115,46 +116,31 @@ my $playlists = $win->add(
 my $directories = $win->add( 
     'directories', 'TextViewer',
     -fg => 'white',
-    -title => ".:Directories:.",
+    -title => ".: Directories :.",
     -readonly => 1,
-    -y => 18,
+    -y => 19,
     -x => 1,
     -focusable => 0,
     -wrapping => 1,
     -height => 8,
-    -width => int ($win->width() / 4),
+    -width => int ($win->width() / 3),
     -intellidraw => 1,
     -border => 1,
     -ipad => 1,
 ) or die "directories";
 
-my $equalizer = $win->add( 
-    'equalizer', 'TextViewer',
-    -fg => 'white',
-    -title => ".:Equalizer:.",
-    -readonly => 1,
-    -y => 27,
-    -x => 1,
-    -focusable => 0,
-    -wrapping => 1,
-    -height => 7,
-    -width => int ($win->width() / 4),
-    -intellidraw => 1,
-    -border => 1,
-    -ipad => 1,
-) or die "equalizer";
-
 my $progressbar = $win->add(
     'progress', 'Progressbar',
     -max       => 100,
     -pos       => 0,
-    -y => 34,
-    -x => 1,
+    -y => 1,
+    -x => int($win->width() / 2 + 1),
     -focusable => 0,
     -wrapping => 1,
     -height => 3,
-    -width => int ($win->width() / 4),
+    -width => int ($win->width() / 2 - 1),
     -intellidraw => 1,
+    -title => ".: Progress :.",
     -border => 1,
 ) or die "progressbar";
 
@@ -177,11 +163,6 @@ $SIG{ALRM} = sub {
 # draw the menu
 sub draw_menu {
     $curlist->clear_selection();
-    $controls->text("(P)lay/(p)ause - (n)ext - p(r)evious - (S)top - (t)oggle shuffle - r(e)scan dir - (Q)uit\n" .
-                    "(a)dd / (d)el / (s)witch to/from playlist - (A)dd / (R)emove dir - (N)ew / (D)el List\n" .
-                    "SPACE or ENTER to select, TAB to confirm -  LEFT / RIGHT Arrow Key seek +-10s"
-                    );
-    $controls->draw();
     my $dirtxt;
     if (scalar @{$STORAGE->{'DIRS'}}) {
         for (@{$STORAGE->{'DIRS'}}) {
@@ -235,9 +216,9 @@ sub draw_menu {
     $curlist->values(sort keys %pl);
     $curlist->labels(\%pl);
     $curlist->draw();
-#    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
-#                     "(B/b)(M/m)(H/h)");
-#    $equalizer->draw();
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
     $progressbar->draw();
 }
 
@@ -253,9 +234,9 @@ sub quit_program {
     print $Min "quit\n";
     close $Min;
     close $Mout;
+    $cui->exit_curses();
     kill $MPLPID;
     store_data();
-    $cui->exit_curses();
     exit(0);
 }
 
@@ -523,57 +504,138 @@ sub del_from_pl {
     &draw_menu();    
 }
 
-# set bass up
-sub bass_up {
-    $BASS += 0.1 unless $BASS > 7;
-    print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
-                     "(B/b)(M/m)(H/h)");
+sub b1_switch {
+    my $new_b1 = $cui->question("Please enter the new value for freq: 31.25Hz (currently $EQ[0]dB)");
+    if (defined $new_b1 && $new_b1 < 12.01 && $new_b1 > -12.01) {
+        $EQ[0] = $new_b1;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
     $equalizer->draw();
-}
-# set bass down
-sub bass_down {
-    $BASS -= 0.1 unless $BASS < 0.11;
-    print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
-                     "(B/b)(M/m)(H/h)");
-    $equalizer->draw();
-}
-# set mids up
-sub mid_up {
-    $MID += 0.1 unless $MID > 7;
-    print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
-                     "(B/b)(M/m)(H/h)");
-    $equalizer->draw();
-}
-# set mids down
-sub mid_down {
-    $MID -= 0.1 unless $MID < 0.11;
-    print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
-                     "(B/b)(M/m)(H/h)");
-    $equalizer->draw();
-}
-# set highs up
-sub high_up {
-    $HIGH += 0.1 unless $HIGH > 7;
-    print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
-                     "(B/b)(M/m)(H/h)");
-    $equalizer->draw();
-}
-# set highs down
-sub high_down {
-    $HIGH -= 0.1 unless $HIGH < 0.11;
-    print $Min "seq $BASS $MID $HIGH\n";
-    $equalizer->text("BASS MIDS HIGH\n " . sprintf("%3.1f  %3.1f  %3.1f\n", $BASS,$MID,$HIGH) .
-                     "(B/b)(M/m)(H/h)");
-    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
 }
 
+sub b2_switch {
+    my $new_b2 = $cui->question("Please enter the new value for freq: 62.50Hz (currently $EQ[1]dB)");
+    if (defined $new_b2 && $new_b2 < 12.01 && $new_b2 > -12.01) {
+        $EQ[1] = $new_b2;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+
+sub b3_switch {
+    my $new_b3 = $cui->question("Please enter the new value for freq: 125.0Hz (currently $EQ[2]dB)");
+    if (defined $new_b3 && $new_b3 < 12.01 && $new_b3 > -12.01) {
+        $EQ[2] = $new_b3;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+
+sub b4_switch {
+    my $new_b4 = $cui->question("Please enter the new value for freq: 250.0Hz (currently $EQ[3]dB)");
+    if (defined $new_b4 && $new_b4 < 12.01 && $new_b4 > -12.01) {
+        $EQ[3] = $new_b4;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+
+sub b5_switch {
+    my $new_b5 = $cui->question("Please enter the new value for freq: 500.0Hz (currently $EQ[4]dB)");
+    if (defined $new_b5 && $new_b5 < 12.01 && $new_b5 > -12.01) {
+        $EQ[4] = $new_b5;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+sub b6_switch {
+    my $new_b6 = $cui->question("Please enter the new value for freq: 1.0kHz (currently $EQ[5]dB)");
+    if (defined $new_b6 && $new_b6 < 12.01 && $new_b6 > -12.01) {
+        $EQ[5] = $new_b6;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+
+sub b7_switch {
+    my $new_b7 = $cui->question("Please enter the new value for freq: 2.0kHz (currently $EQ[6]dB)");
+    if (defined $new_b7 && $new_b7 < 12.01 && $new_b7 > -12.01) {
+        $EQ[6] = $new_b7;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+
+sub b8_switch {
+    my $new_b8 = $cui->question("Please enter the new value for freq: 4.0kHz (currently $EQ[7]dB)");
+    if (defined $new_b8 && $new_b8 < 12.01 && $new_b8 > -12.01) {
+        $EQ[7] = $new_b8;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+
+sub b9_switch {
+    my $new_b9 = $cui->question("Please enter the new value for freq: 8.0kHz (currently $EQ[8]dB)");
+    if (defined $new_b9 && $new_b9 < 12.01 && $new_b9 > -12.01) {
+        $EQ[8] = $new_b9;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+
+sub b10_switch {
+    my $new_b10 = $cui->question("Please enter the new value for freq: 16.0kHz (currently $EQ[9]dB)");
+    if (defined $new_b10 && $new_b10 < 12.01 && $new_b10 > -12.01) {
+        $EQ[9] = $new_b10;
+    }
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->draw();
+    my $eq_str = join ":", @EQ;
+    print $Min "af equalizer=$eq_str\n";
+}
+
+sub help {
+    $cui->dialog("P - Play selected song\n" .
+                 "p - pause\n" . "n - play next song\n" . "r - play previous song\n" . 
+                 "S - Stop playing\n". "t - toggle shuffle\n" . "e - rescan directories\n" .
+                 "Q - Quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
+                 "s - switch to playlist\n" . "A - Add directory\n" . "R - Remove directory\n" .
+                 "N - New playlist\n" . "D - Delete playlist\n\n" .
+                 "SPACE or ENTER to select, TAB to confirm -  LEFT / RIGHT Arrow Key seek +-10s"
+    );
+}
 
 # define keybindings, draw menu for first time, start main loop :)
+$cui->set_binding(\&help, "h");
 $cui->set_binding(\&quit_program, "Q");
 $cui->set_binding(\&add_dir, "A");
 $cui->set_binding(\&rem_dir, "R");
@@ -591,11 +653,17 @@ $cui->set_binding(\&stop, "S" );
 $cui->set_binding(\&rescan_dirs, "e" );
 $cui->set_binding(\&seek_right, KEY_RIGHT );
 $cui->set_binding(\&seek_left, KEY_LEFT );
-$cui->set_binding(\&bass_up, "B" );
-$cui->set_binding(\&bass_down, "b" );
-$cui->set_binding(\&mid_up, "M" );
-$cui->set_binding(\&mid_down, "m" );
-$cui->set_binding(\&high_up, "H" );
-$cui->set_binding(\&high_down, "h" );
+
+$cui->set_binding(\&b1_switch, KEY_F(1) );
+$cui->set_binding(\&b2_switch, KEY_F(2) );
+$cui->set_binding(\&b3_switch, KEY_F(3) );
+$cui->set_binding(\&b4_switch, KEY_F(4) );
+$cui->set_binding(\&b5_switch, KEY_F(5) );
+$cui->set_binding(\&b6_switch, KEY_F(6) );
+$cui->set_binding(\&b7_switch, KEY_F(7) );
+$cui->set_binding(\&b8_switch, KEY_F(8) );
+$cui->set_binding(\&b9_switch, KEY_F(9) );
+$cui->set_binding(\&b10_switch, KEY_F(10) );
+
 &draw_menu();
 $cui->mainloop();
