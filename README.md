@@ -50,7 +50,8 @@ usage scenario then is to select what you want to play and press 'P'.
 About:
 ------
 
-whistle aims to be a very minimalistic and basic mp3 player.
+whistle aims to be a very minimalistic and basic audio player.
+Currently it can play mp3- and ogg-vorbis-files.
 
 Basically, whistle is a nifty front-end to mplayer, which it's
 based on. Without mplayer, there would be no whistle. The earlier
