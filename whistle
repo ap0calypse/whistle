@@ -374,9 +374,6 @@ sub play {
         $curlist->clear_selection();
         $curlist->draw();
         print $Min "loadfile $file\n";
-        open my $GNA, ">> /tmp/gna.txt";
-        print $GNA "loadfile $file\n";
-        close $GNA;
         my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'duration_s'} || '0';
         $TIMER->{'rest_time'} = $altime;
         $TIMER->{'max_time'} = $altime;
