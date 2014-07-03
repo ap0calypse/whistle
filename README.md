@@ -5,9 +5,10 @@ Prerequisites:
 
 Perl Modules:
     
-        - MP3::Info      (archlinux-package: perl-mp3-info)
-        - Curses::UI     (archlinux-package: perl-curses-ui)
-        - File::MimeInfo (archlinux-package: perl-file-mimeinfo)
+        - MP3::Info           (archlinux-package: perl-mp3-info)
+        - Curses::UI          (archlinux-package: perl-curses-ui)
+        - File::MimeInfo      (archlinux-package: perl-file-mimeinfo)
+        - Ogg::Vorbis::Header (aur-package: perl-ogg-vorbis-header)
 
 Programs:
 
@@ -17,7 +18,7 @@ Programs:
 What works? a.k.a. Features:
 ----------------------------
 
-        - full MP3 play/stop/next/prev/seek/shuffle support
+        - full MP3/OGG play/stop/next/prev/seek/shuffle support
         - progressbar
         - playlists
         - multi-select for playlist-editing
@@ -28,7 +29,6 @@ What's to come?
 ---------------
 
         - a lot of bugfixes for sure
-        - support for various formats (very soon)
         - color support
         - tab completition
         - mp3 tag write support
