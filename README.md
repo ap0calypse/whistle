@@ -11,7 +11,7 @@ Perl Modules:
 
 Programs:
 
-        - mpg123 (soon mplayer maybe?)
+        - mplayer (mpg123 earlier)
 
 
 What works? a.k.a. Features:
@@ -21,18 +21,16 @@ What works? a.k.a. Features:
         - progressbar
         - playlists
         - multi-select for playlist-editing
-        - simple bass/mid/treb settings
+        - better and finer granulated equalizer (10 band)
 
 
 What's to come?
 ---------------
 
         - a lot of bugfixes for sure
-        - support for various formats
-        - better and finer granulated equalizer
+        - support for various formats (very soon)
         - color support
         - tab completition
-        - better management of screen space
         - mp3 tag write support
         - burn playlist 2 iso or cd
         - ...
@@ -54,15 +52,16 @@ About:
 
 whistle aims to be a very minimalistic and basic mp3 player.
 
-Basically, whistle is a nifty front-end to mpg123, which it's
-based on. Without mpg123, there would be no whistle.
+Basically, whistle is a nifty front-end to mplayer, which it's
+based on. Without mplayer, there would be no whistle. The earlier
+mpg123 back-end is now completely done by mplayer.
 
 
 Thanks:
 -------
  - all the people testing and helping me to improve whistle :)
    (kmandla, matthew cox, smiszym, ...)
- - all developers behind mpg123
+ - all developers behind mpg123, mplayer and mpv
  - all developers from Curses and Curses::UI
  - all developers from MP3::Info
  
