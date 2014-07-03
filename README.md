@@ -51,11 +51,11 @@ About:
 ------
 
 whistle aims to be a very minimalistic and basic audio player.
-Currently it can play mp3- and ogg-vorbis-files.
+Currently it can play mp3 and ogg files.
 
 Basically, whistle is a nifty front-end to mplayer, which it's
 based on. Without mplayer, there would be no whistle. The earlier
-mpg123 back-end is now completely done by mplayer.
+mpg123 back-end work is now completely done by mplayer.
 
 
 Thanks:
