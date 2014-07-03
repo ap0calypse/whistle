@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Curses::UI;
 use MP3::Info;
+use Ogg::Vorbis::Header;
 use Storable qw(nstore retrieve);
 use File::Find;
 use IPC::Open2;
@@ -237,12 +238,12 @@ sub store_data {
 
 # quit the program, close filehandles, store data
 sub quit_program {
+    store_data();
     print $Min "quit\n";
     close $Min;
     close $Mout;
     $cui->exit_curses();
     kill $MPLPID;
-    store_data();
     exit(0);
 }
 
@@ -264,6 +265,20 @@ sub found_mp3 {
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration'} = sprintf("%02d:%02d", 
                                                                         $infohash->{MM} || 0, $infohash->{SS} || 0);
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = sprintf("%d", ($infohash->{MM} || 0) * 60 + ($infohash->{SS} || 0));
+        $num_songs++;
+    }
+    elsif ($mime_long =~ m/.*Ogg Audio.*/) {
+        my $md5sum = md5_hex($File::Find::name);
+        $real_order->{'ALL'}{$num_songs} = $md5sum; 
+        my $ogg = Ogg::Vorbis::Header->new($File::Find::name);
+        my $esc_name = $File::Find::name;
+        $esc_name =~ s/ /\\ /g;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'filename'} = $esc_name;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'artist'} = ($ogg->comment('artist'))[0] || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'album'} = ($ogg->comment('album'))[0] || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'title'} = ($ogg->comment('title'))[0] || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration'} = sprintf("%02d:%02d", int($ogg->info('length') / 60), int($ogg->info('length') % 60));
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = int($ogg->info('length'));
         $num_songs++;
     }
 }
