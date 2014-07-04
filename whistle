@@ -255,7 +255,7 @@ sub quit_program {
 sub found_mp3 {
     my $mime = mimetype($File::Find::name);
     my $mime_long = describe($mime);
-    if ($mime_long =~ m/.*MP3 audio.*/) {
+    if ($mime_long =~ m/^MP3 audio$/) {
         my $md5sum = md5_hex($File::Find::name);
         $real_order->{'ALL'}{$num_songs} = $md5sum; 
         my $taghash = get_mp3tag($File::Find::name);
@@ -271,7 +271,7 @@ sub found_mp3 {
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = sprintf("%d", ($infohash->{MM} || 0) * 60 + ($infohash->{SS} || 0));
         $num_songs++;
     }
-    elsif ($mime_long =~ m/.*Ogg Audio.*/) {
+    elsif ($mime_long =~ m/^Ogg Audio$/) {
         my $md5sum = md5_hex($File::Find::name);
         $real_order->{'ALL'}{$num_songs} = $md5sum; 
         my $ogg = Ogg::Vorbis::Header->new($File::Find::name);
@@ -285,7 +285,7 @@ sub found_mp3 {
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = int($ogg->info('length'));
         $num_songs++;
     }
-    elsif ($mime_long =~ m/.*FLAC audio.*/) {
+    elsif ($mime_long =~ m/^FLAC audio$/) {
         my $md5sum = md5_hex($File::Find::name);
         $real_order->{'ALL'}{$num_songs} = $md5sum; 
         my $flac = Audio::FLAC::Header->new($File::Find::name);
