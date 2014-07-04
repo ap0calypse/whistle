@@ -9,6 +9,7 @@ Perl Modules:
         - Curses::UI          (archlinux-package: perl-curses-ui)
         - File::MimeInfo      (archlinux-package: perl-file-mimeinfo)
         - Ogg::Vorbis::Header (aur-package: perl-ogg-vorbis-header)
+        - Audio::FLAC::Header (aur-package: perl-audio-flac-header)
 
 Programs:
 
@@ -18,7 +19,7 @@ Programs:
 What works? a.k.a. Features:
 ----------------------------
 
-        - full MP3/OGG play/stop/next/prev/seek/shuffle support
+        - full MP3/OGG/FLAC play/stop/next/prev/seek/shuffle support
         - progressbar
         - playlists
         - multi-select for playlist-editing
@@ -65,6 +66,8 @@ Thanks:
  - all developers behind mpg123, mplayer and mpv
  - all developers from Curses and Curses::UI
  - all developers from MP3::Info
+ - all developers from Ogg::Vorbis::Header
+ - all developers from Audio::FLAC::Header
  
 
 
