@@ -4,6 +4,7 @@ use warnings;
 use Curses::UI;
 use MP3::Info;
 use Ogg::Vorbis::Header;
+use Audio::FLAC::Header;
 use Storable qw(nstore retrieve);
 use File::Find;
 use IPC::Open2;
@@ -54,13 +55,16 @@ else {
     $STORAGE->{'PLAYLIST'}{'ALL'} = {};
     $STORAGE->{'real_order'} = {};
 }
-initscr();
 
-my ( $row, $col );
-getmaxyx( $row, $col );
+# check for screen size
+initscr();
+my ($row, $col);
+getmaxyx($row, $col);
 endwin();
+
 print "your terminal windows' height is too low! (26 rows needed, you have $row)\n" and exit(0) if $row < 26;
 print "your terminal windows' length is too low! (105 cols needed, you have $col)\n" and exit(0) if $col < 105;
+
 # create the main ui and main window
 my $cui = new Curses::UI ( -clear_on_exit => 0, -color_support => 1);
 my $win = $cui->add('win', 'Window', -border => 1, -title => "whistle");
@@ -279,6 +283,22 @@ sub found_mp3 {
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'title'} = ($ogg->comment('title'))[0] || "N/A";
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration'} = sprintf("%02d:%02d", int($ogg->info('length') / 60), int($ogg->info('length') % 60));
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = int($ogg->info('length'));
+        $num_songs++;
+    }
+    elsif ($mime_long =~ m/.*FLAC audio.*/) {
+        my $md5sum = md5_hex($File::Find::name);
+        $real_order->{'ALL'}{$num_songs} = $md5sum; 
+        my $flac = Audio::FLAC::Header->new($File::Find::name);
+        my $info = $flac->info();
+        my $tags = $flac->tags();
+        my $esc_name = $File::Find::name;
+        $esc_name =~ s/ /\\ /g;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'filename'} = $esc_name;
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'artist'} = $tags->{'ARTIST'} || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'album'} = $tags->{'ALBUM'} || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'title'} = $tags->{'TITLE'} || "N/A";
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration'} = sprintf("%02d:%02d", $flac->{'trackLengthMinutes'}, $flac->{'trackLengthSeconds'});
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = int($flac->{'trackTotalLengthSeconds'});
         $num_songs++;
     }
 }
