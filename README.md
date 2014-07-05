@@ -30,6 +30,9 @@ What's to come?
 ---------------
 
         - a lot of bugfixes for sure
+        - shuffle by artist/album
+        - equalizer presets
+        - per-song/album-equalizer (meaning the equalizer settings can be saved for each title/album/artist)
         - color support
         - tab completition
         - mp3 tag write support
@@ -52,7 +55,7 @@ About:
 ------
 
 whistle aims to be a very minimalistic and basic audio player.
-Currently it can play mp3 and ogg files.
+Currently it can play mp3, flac and ogg files.
 
 Basically, whistle is a nifty front-end to mplayer, which it's
 based on. Without mplayer, there would be no whistle. The earlier
