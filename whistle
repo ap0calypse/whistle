@@ -542,11 +542,14 @@ sub del_from_pl {
     &draw_menu();    
 }
 
-sub b1_switch {
-    my $new_b1 = $cui->question("Please enter the new value for freq: 31.25Hz (currently $EQ[0]dB)");
-    if (defined $new_b1 && $new_b1 < 12.01 && $new_b1 > -12.01) {
-        $EQ[0] = $new_b1;
-    }
+sub band_switch {
+    my ($band) = @_;
+    my @freq = ("31.25Hz", "62.50Hz", "125.0Hz", "250.0Hz", "500.0Hz",
+                "1.0kHz",  "2.0kHz",  "4.0kHz",  "8.0kHz",  "16.0kHz");
+
+    my $new_val = $cui->question("Please enter the new value for freq: $freq[$band] (currently $EQ[$band]dB)");
+    $EQ[$band] = $new_val if (defined $new_val && $new_val <= 12.0 && $new_val >= -12.0);
+
     $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
                      sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
     $equalizer->draw();
@@ -554,120 +557,24 @@ sub b1_switch {
     print $Min "af equalizer=$eq_str\n";
 }
 
-sub b2_switch {
-    my $new_b2 = $cui->question("Please enter the new value for freq: 62.50Hz (currently $EQ[1]dB)");
-    if (defined $new_b2 && $new_b2 < 12.01 && $new_b2 > -12.01) {
-        $EQ[1] = $new_b2;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
-
-sub b3_switch {
-    my $new_b3 = $cui->question("Please enter the new value for freq: 125.0Hz (currently $EQ[2]dB)");
-    if (defined $new_b3 && $new_b3 < 12.01 && $new_b3 > -12.01) {
-        $EQ[2] = $new_b3;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
-
-sub b4_switch {
-    my $new_b4 = $cui->question("Please enter the new value for freq: 250.0Hz (currently $EQ[3]dB)");
-    if (defined $new_b4 && $new_b4 < 12.01 && $new_b4 > -12.01) {
-        $EQ[3] = $new_b4;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
-
-sub b5_switch {
-    my $new_b5 = $cui->question("Please enter the new value for freq: 500.0Hz (currently $EQ[4]dB)");
-    if (defined $new_b5 && $new_b5 < 12.01 && $new_b5 > -12.01) {
-        $EQ[4] = $new_b5;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
-sub b6_switch {
-    my $new_b6 = $cui->question("Please enter the new value for freq: 1.0kHz (currently $EQ[5]dB)");
-    if (defined $new_b6 && $new_b6 < 12.01 && $new_b6 > -12.01) {
-        $EQ[5] = $new_b6;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
-
-sub b7_switch {
-    my $new_b7 = $cui->question("Please enter the new value for freq: 2.0kHz (currently $EQ[6]dB)");
-    if (defined $new_b7 && $new_b7 < 12.01 && $new_b7 > -12.01) {
-        $EQ[6] = $new_b7;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
-
-sub b8_switch {
-    my $new_b8 = $cui->question("Please enter the new value for freq: 4.0kHz (currently $EQ[7]dB)");
-    if (defined $new_b8 && $new_b8 < 12.01 && $new_b8 > -12.01) {
-        $EQ[7] = $new_b8;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
-
-sub b9_switch {
-    my $new_b9 = $cui->question("Please enter the new value for freq: 8.0kHz (currently $EQ[8]dB)");
-    if (defined $new_b9 && $new_b9 < 12.01 && $new_b9 > -12.01) {
-        $EQ[8] = $new_b9;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
-
-sub b10_switch {
-    my $new_b10 = $cui->question("Please enter the new value for freq: 16.0kHz (currently $EQ[9]dB)");
-    if (defined $new_b10 && $new_b10 < 12.01 && $new_b10 > -12.01) {
-        $EQ[9] = $new_b10;
-    }
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
-    $equalizer->draw();
-    my $eq_str = join ":", @EQ;
-    print $Min "af equalizer=$eq_str\n";
-}
+sub b1_switch  { &band_switch(0); }
+sub b2_switch  { &band_switch(1); }
+sub b3_switch  { &band_switch(2); }
+sub b4_switch  { &band_switch(3); }
+sub b5_switch  { &band_switch(4); }
+sub b6_switch  { &band_switch(5); }
+sub b7_switch  { &band_switch(6); }
+sub b8_switch  { &band_switch(7); }
+sub b9_switch  { &band_switch(8); }
+sub b10_switch { &band_switch(9); }
 
 sub help {
-    $cui->dialog("P - Play selected song\n" .
+    $cui->dialog("P - play selected song\n" .
                  "p - pause\n" . "n - play next song\n" . "r - play previous song\n" . 
-                 "S - Stop playing\n". "t - toggle shuffle\n" . "e - rescan directories\n" .
-                 "Q - Quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
-                 "s - switch to playlist\n" . "A - Add directory\n" . "R - Remove directory\n" .
-                 "N - New playlist\n" . "D - Delete playlist\n\n" .
+                 "S - stop playing\n". "t - toggle shuffle\n" . "e - rescan directories\n" .
+                 "Q - quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
+                 "s - switch to playlist\n" . "A - add directory\n" . "R - remove directory\n" .
+                 "N - new playlist\n" . "D - delete playlist\n\n" .
                  "SPACE or ENTER to select, TAB to confirm\nLEFT / RIGHT Arrow Key seek +-10s"
     );
 }
