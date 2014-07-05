@@ -317,7 +317,9 @@ sub add_dir {
 }
 
 # rescan collection
+my $wait;
 sub rescan_dirs {
+    $cui->status('scanning directories, please be patient ...');
     $num_songs = 0;
     if (scalar @{$STORAGE->{'DIRS'}}) {
         find(\&found_mp3, @{$STORAGE->{'DIRS'}});
@@ -325,6 +327,7 @@ sub rescan_dirs {
     else {
         $STORAGE->{'PLAYLIST'}{'ALL'} = undef;
     }
+    $cui->nostatus();
     &draw_menu();
 }
 
@@ -369,6 +372,7 @@ sub del_pl {
 }
 
 our ($art, $track, $file, $state);
+$state = 'Stopped';
 
 # plays the selected item or next/prev if given
 sub play {
