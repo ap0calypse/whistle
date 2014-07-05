@@ -662,12 +662,12 @@ sub b10_switch {
 }
 
 sub help {
-    $cui->dialog("P - Play selected song\n" .
+    $cui->dialog("P - play selected song\n" .
                  "p - pause\n" . "n - play next song\n" . "r - play previous song\n" . 
-                 "S - Stop playing\n". "t - toggle shuffle\n" . "e - rescan directories\n" .
-                 "Q - Quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
-                 "s - switch to playlist\n" . "A - Add directory\n" . "R - Remove directory\n" .
-                 "N - New playlist\n" . "D - Delete playlist\n\n" .
+                 "S - stop playing\n". "t - toggle shuffle\n" . "e - rescan directories\n" .
+                 "Q - quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
+                 "s - switch to playlist\n" . "A - add directory\n" . "R - remove directory\n" .
+                 "N - new playlist\n" . "D - delete playlist\n\n" .
                  "SPACE or ENTER to select, TAB to confirm\nLEFT / RIGHT Arrow Key seek +-10s"
     );
 }
