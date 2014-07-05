@@ -368,6 +368,8 @@ sub del_pl {
     &draw_menu();
 }
 
+our ($art, $track, $file, $state);
+
 # plays the selected item or next/prev if given
 sub play {
     print $Min "stop\n";
@@ -401,11 +403,11 @@ sub play {
         $curlist->set_selection($index);
         $LAST_PLAYED = $index;
     }
-    my $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'filename'};
-    my $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'title'} || '';
-    my $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'artist'} || '';
+    $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'filename'};
+    $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'title'} || '';
+    $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'artist'} || '';
     if ($file) {
-        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: now playing: " . $track . " by $art");
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: Playing: " . $track . " by $art");
         $curlist->clear_selection();
         $curlist->draw();
         print $Min "loadfile $file\n";
@@ -415,18 +417,20 @@ sub play {
         alarm(1);
     }
     else {
-        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ):: ERROR - Could not find file for position $cur");
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: ERROR - Could not find file for position $cur");
         $curlist->clear_selection();
         $curlist->draw();
     }
+    $state = 'Playing';
 }
 
 # stop the current track, deactivate alarm
 sub stop {
     print $Min "stop\n";
-    $curlist->title("Playlist: $CUR_LIST :: STOPPED");
-    $curlist->draw();
     alarm(0);
+    $state = 'Stopped';
+    $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state");
+    $curlist->draw();
 }
 
 # pause the track, save alarm time, restart alarm if unpaused
@@ -437,11 +441,16 @@ sub pause {
     if ($STATE == 1) {
         $rest_altime = $TIMER->{'rest_time'};
         alarm(0);
+        $state = 'Paused';
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state");
     }
     else {
         $TIMER->{'rest_time'} = $rest_altime;
         alarm(1);
+        $state = 'Playing';
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state: $track by $art");
     }
+    $curlist->draw();
 }
 
 # add currently selected track to playlist
@@ -494,8 +503,13 @@ sub switch_pl {
     my $selected = $sel_pl->get();
     $sel_pl->loose_focus();
     $win->delete('sel_pl');
-    $CUR_LIST = $selected  || 'ALL';  
-    $curlist->title("Playlist: $CUR_LIST");
+    $CUR_LIST = $selected  || 'ALL'; 
+    if ($state ne 'Playing') {
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state");
+    }
+    else {
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state: $track by $art");
+    }
     &draw_menu();
 }
 
@@ -506,7 +520,16 @@ sub next { &play('NEXT'); }
 sub prev { &play('PREV'); }
 
 # toggle shuffle, 1 = shuffle, 0 = normal playlist order
-sub toggle_shuffle { $SHUFFLE = $SHUFFLE ? 0 : 1; $curlist->draw();}
+sub toggle_shuffle { 
+    $SHUFFLE = $SHUFFLE ? 0 : 1; 
+    if ($state ne 'Playing') {
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state"); 
+    }
+    else {
+        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state: $track by $art"); 
+    }
+    $curlist->draw();
+}
 
 # seek 10 seconds forward in music stream
 sub seek_right {
