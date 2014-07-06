@@ -561,7 +561,7 @@ sub del_from_pl {
     my @to_del = $curlist->get();
     return unless @to_del;
     for (@to_del) {
-        if (exists $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}}) {
+        if (exists $real_order->{$CUR_LIST}{$_} && exists $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}}) {
             delete $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}};
             delete $real_order->{$CUR_LIST}{$_};
         }
