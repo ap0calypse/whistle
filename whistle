@@ -363,9 +363,11 @@ sub rem_dir {
 # deletes a playlist. the 'ALL' playlist must not be deleted!
 sub del_pl {
     $pl_del = $cui->question('Please enter the name of the playlist you want to delete');
-    unless ($pl_del eq "ALL") {
-        if (exists $STORAGE->{'PLAYLIST'}{$pl_del}) {
-            delete $STORAGE->{'PLAYLIST'}{$pl_del};
+    if (defined $pl_del) {
+        unless ($pl_del eq "ALL") {
+            if (exists $STORAGE->{'PLAYLIST'}{$pl_del}) {
+                delete $STORAGE->{'PLAYLIST'}{$pl_del};
+            }
         }
     }
     &draw_menu();
@@ -440,19 +442,21 @@ sub stop {
 # pause the track, save alarm time, restart alarm if unpaused
 our $rest_altime;
 sub pause {
-    print $Min "pause\n";
-    $STATE = $STATE ? 0 : 1;
-    if ($STATE == 1) {
-        $rest_altime = $TIMER->{'rest_time'};
-        alarm(0);
-        $state = 'Paused';
-        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state");
-    }
-    else {
-        $TIMER->{'rest_time'} = $rest_altime;
-        alarm(1);
-        $state = 'Playing';
-        $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state: $track by $art");
+    if (defined $track) {
+    	print $Min "pause\n";
+    	$STATE = $STATE ? 0 : 1;
+    	if ($STATE == 1) {
+        	$rest_altime = $TIMER->{'rest_time'};
+        	alarm(0);
+        	$state = 'Paused';
+        	$curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state");
+    	}
+    	else {
+            $TIMER->{'rest_time'} = $rest_altime;
+            alarm(1);
+            $state = 'Playing';
+	    $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state: $track by $art");
+        }
     }
     $curlist->draw();
 }
