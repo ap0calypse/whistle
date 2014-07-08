@@ -1,5 +1,22 @@
 README - whistle
 
+About:
+------
+
+whistle aims to be a very minimalistic and basic audio player.
+Currently it can play mp3, flac and ogg files.
+
+Basically, whistle is a nifty front-end to mplayer, which it's
+based on. Without mplayer, there would be no whistle. The earlier
+mpg123 back-end work is now completely done by mplayer.
+
+
+Latest screenshot:
+------------------
+
+![screenshot whistle](screenshot.png "Screenshot")
+
+
 Prerequisites:
 --------------
 
@@ -48,18 +65,6 @@ whistle must be started within a fully functional terminal.
 
 The first step is to add a music directory with 'A'. The standard
 usage scenario then is to select what you want to play and press 'P'.
-
-
-
-About:
-------
-
-whistle aims to be a very minimalistic and basic audio player.
-Currently it can play mp3, flac and ogg files.
-
-Basically, whistle is a nifty front-end to mplayer, which it's
-based on. Without mplayer, there would be no whistle. The earlier
-mpg123 back-end work is now completely done by mplayer.
 
 
 Thanks:
