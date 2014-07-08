@@ -41,6 +41,7 @@ What works? a.k.a. Features:
         - playlists
         - multi-select for playlist-editing
         - better and finer granulated equalizer (10 band)
+        - per-song/album-equalizer (meaning: individual equalizer settings for each title/album/artist)
 
 
 What's to come?
@@ -49,7 +50,6 @@ What's to come?
         - a lot of bugfixes for sure
         - shuffle by artist/album
         - equalizer presets
-        - per-song/album-equalizer (meaning the equalizer settings can be saved for each title/album/artist)
         - color support
         - tab completition
         - mp3 tag write support
