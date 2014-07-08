@@ -26,7 +26,7 @@ our $LAST_PLAYED = 0;
 our $real_order;
 
 # vars for mplayer's 10band equalizer (allowed: -12 <-> 12)
-our @EQ = (0,0,0,0,0,0,0,0,0,0);
+our @EQ = (0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0);
 
 my ($dir_rem, $pl_add, $pl_del, $sel_pl);
 my $num_songs = 0;
@@ -269,6 +269,7 @@ sub found_mp3 {
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration'} = sprintf("%02d:%02d", 
                                                                         $infohash->{MM} || 0, $infohash->{SS} || 0);
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = sprintf("%d", ($infohash->{MM} || 0) * 60 + ($infohash->{SS} || 0));
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'eq'} = $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'eq'} || "0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0";
         $num_songs++;
     }
     elsif ($mime_long =~ m/^Ogg Audio$/) {
@@ -283,6 +284,7 @@ sub found_mp3 {
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'title'} = ($ogg->comment('title'))[0] || ($ogg->comment('TITLE'))[0] || "N/A";
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration'} = sprintf("%02d:%02d", int($ogg->info('length') / 60), int($ogg->info('length') % 60));
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = int($ogg->info('length'));
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'eq'} = $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'eq'} || "0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0";
         $num_songs++;
     }
     elsif ($mime_long =~ m/^FLAC audio$/) {
@@ -299,6 +301,7 @@ sub found_mp3 {
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'title'} = $tags->{'TITLE'} || $tags->{'title'} || "N/A";
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration'} = sprintf("%02d:%02d", $flac->{'trackLengthMinutes'}, $flac->{'trackLengthSeconds'});
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'duration_s'} = int($flac->{'trackTotalLengthSeconds'});
+        $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'eq'} = $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'eq'} || "0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0:0.0";
         $num_songs++;
     }
 }
@@ -328,6 +331,7 @@ sub rescan_dirs {
         $STORAGE->{'PLAYLIST'}{'ALL'} = undef;
     }
     $cui->nostatus();
+    &store_data();
     &draw_menu();
 }
 
@@ -340,6 +344,7 @@ sub new_pl {
             $STORAGE->{'PLAYLIST'}{$pl_add} = {};
         }
     }
+    &store_data();
     &draw_menu();
 }
 
@@ -356,6 +361,7 @@ sub rem_dir {
         $STORAGE->{'DIRS'} = [];
         $STORAGE->{'PLAYLIST'}{'ALL'} = {};
     }
+    &store_data();
     &draw_menu();
 }
 
@@ -370,6 +376,7 @@ sub del_pl {
             }
         }
     }
+    &store_data();
     &draw_menu();
 }
 
@@ -416,6 +423,11 @@ sub play {
         $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: Playing: " . $track . " by $art");
         $curlist->clear_selection();
         $curlist->draw();
+        print $Min "af equalizer=" . $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'eq'} . "\n";
+        @EQ = split /:/, $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'eq'};
+        $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
+                         sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+        $equalizer->draw();
         print $Min "loadfile $file\n";
         my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'duration_s'} || '0';
         $TIMER->{'rest_time'} = $altime;
@@ -489,6 +501,7 @@ sub add_to_pl {
             $STORAGE->{'PLAYLIST'}{$selected}{$real_order->{$selected}{$_}} = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}};
         }
     }
+    &store_data();
 }
 
 # switch playlist
@@ -570,6 +583,7 @@ sub del_from_pl {
             delete $real_order->{$CUR_LIST}{$_};
         }
     }
+    &store_data();
     &draw_menu();    
 }
 
@@ -579,7 +593,7 @@ sub band_switch {
                 "1.0kHz",  "2.0kHz",  "4.0kHz",  "8.0kHz",  "16.0kHz");
 
     my $new_val = $cui->question("Please enter the new value for freq: $freq[$band] (currently $EQ[$band]dB)");
-    $EQ[$band] = $new_val if (defined $new_val && $new_val <= 12.0 && $new_val >= -12.0);
+    $EQ[$band] = sprintf ("%4.1f", $new_val) if ((defined $new_val && $new_val == 0 ) || (defined $new_val && $new_val <= 12.0 && $new_val >= -12.0));
 
     $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
                      sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
@@ -606,9 +620,68 @@ sub help {
                  "Q - quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
                  "s - switch to playlist\n" . "A - add directory\n" . "R - remove directory\n" .
                  "N - new playlist\n" . "D - delete playlist\n\n" .
+                 "v - save equalizer for artist/album/song\n\n" .
                  "SPACE or ENTER to select, TAB to confirm\nLEFT / RIGHT Arrow Key seek +-10s"
     );
 }
+
+# save equalizer settings
+sub save_eq {
+    my @songs = $curlist->get();
+    my %choo = ( 1 => 'selected songs only', 2 => 'all songs on this album', 3 => 'all songs from this artist' );
+    my $choose = $win->add(
+            'sel_pl', 'Listbox',
+            -values    => [""],
+            -radio     => 1,
+            -y => int ($win->height() / 2),
+            -x => int ($win->width() / 3) + 1,
+            -focusable => 1,
+            -height => 9,
+            -width => 60,
+            -border => 1,
+            -ipad => 2,
+    );
+    $choose->title('I want to save this equalizer settings for:');
+
+    $choose->values(sort keys %choo);
+    $choose->labels(\%choo);
+    $choose->draw();
+    $choose->modalfocus();
+    my $selected = $choose->get();
+    $choose->loose_focus();
+    $win->delete('sel_pl');
+    if (defined $selected) {
+        if ($selected == 1) {
+            for (@songs) {
+                $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}}{'eq'} = join ":", @EQ;
+            }
+        }
+        elsif ($selected == 2) {
+            for (@songs) {
+                my $album = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}}{'album'};
+                my $artist = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}}{'artist'};
+                for my $k (keys %{$STORAGE->{'PLAYLIST'}{'ALL'}}) {
+                    if ($STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'album'} eq $album && $STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'artist'} eq $artist) {
+                        $STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'eq'} = join ":", @EQ;
+                    }
+                }
+            }
+        }
+        elsif ($selected == 3) {
+            for (@songs) {
+                my $artist = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}}{'artist'};
+                for my $k (keys %{$STORAGE->{'PLAYLIST'}{'ALL'}}) {
+                    if ($STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'artist'} eq $artist) {
+                        $STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'eq'} = join ":", @EQ;
+                    }
+                }
+            }
+        }
+    }
+    &store_data();
+    &draw_menu();
+}
+
 
 # define keybindings, draw menu for first time, start main loop :)
 $cui->set_binding(\&help, "h");
@@ -627,6 +700,8 @@ $cui->set_binding(\&prev, "r" );
 $cui->set_binding(\&toggle_shuffle, "t" );
 $cui->set_binding(\&stop, "S" );
 $cui->set_binding(\&rescan_dirs, "e" );
+$cui->set_binding(\&save_eq, "v" );
+
 $cui->set_binding(\&seek_right, KEY_RIGHT );
 $cui->set_binding(\&seek_left, KEY_LEFT );
 
