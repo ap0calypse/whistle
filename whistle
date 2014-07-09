@@ -201,7 +201,7 @@ sub draw_menu {
     my %pl;
     $curlist->values('');
     my $pl_w = int($curlist->width() / 9);
-    my ($pl_t, $pl_a, $pl_al, $pl_d) = (int($pl_w * 2) , int($pl_w * 1), int($pl_w * 2), int ($pl_w));
+    my ($pl_t, $pl_a, $pl_al, $pl_d) = (int($pl_w * 3) , int($pl_w * 1), int($pl_w * 2), int ($pl_w));
     $pl_t = "$pl_t.$pl_t" . "s";
     $pl_a = "$pl_a.$pl_a" . "s";
     $pl_al = "$pl_al.$pl_al" . "s";
