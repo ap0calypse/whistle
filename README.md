@@ -85,3 +85,8 @@ If you really like this tool, feel free to tip me via [Gittip][tip].
 [![Gittip](http://img.shields.io/gittip/ap0calypse.svg)](https://www.gittip.com/ap0calypse/)
 
 [tip]:https://www.gittip.com/ap0calypse/
+
+or, if you want to give me some crypto-credit, please use this adresses:
+
+  - BitCoin:    184RfWXUwxyniuQAySKjNujk1JvAkQnMsN
+  - DogeCoin:   D7t9Vwf7ScLuUmsyn8wk3VPeUd7xBswViA
