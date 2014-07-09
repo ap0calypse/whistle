@@ -380,7 +380,7 @@ sub del_pl {
     &draw_menu();
 }
 
-our ($art, $track, $file, $state);
+our ($art, $track, $file, $state, $cur_pos);
 $state = 'Stopped';
 
 # plays the selected item or next/prev if given
@@ -419,6 +419,7 @@ sub play {
     $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'filename'};
     $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'title'} || '';
     $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'artist'} || '';
+    $cur_pos = $index;
     if ($file) {
         $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: Playing: " . $track . " by $art");
         $curlist->clear_selection();
@@ -615,7 +616,8 @@ sub b10_switch { &band_switch(9); }
 
 sub help {
     $cui->dialog("P - play selected song\n" .
-                 "p - pause\n" . "n - play next song\n" . "r - play previous song\n" . 
+                 "p - pause\n" . "n - play next song\n" . "r - play previous song\n" .
+                 "j - jump to currently playing song\n" . 
                  "S - stop playing\n". "t - toggle shuffle\n" . "e - rescan directories\n" .
                  "Q - quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
                  "s - switch to playlist\n" . "A - add directory\n" . "R - remove directory\n" .
@@ -683,6 +685,14 @@ sub save_eq {
 }
 
 
+sub jump {
+    if (defined $file && $cur_pos <= $curlist->{-max_selected}) {
+    	$curlist->{-ypos} = $cur_pos;
+    	$curlist->draw();
+    }
+}
+
+
 # define keybindings, draw menu for first time, start main loop :)
 $cui->set_binding(\&help, "h");
 $cui->set_binding(\&quit_program, "Q");
@@ -701,6 +711,7 @@ $cui->set_binding(\&toggle_shuffle, "t" );
 $cui->set_binding(\&stop, "S" );
 $cui->set_binding(\&rescan_dirs, "e" );
 $cui->set_binding(\&save_eq, "v" );
+$cui->set_binding(\&jump, "j" );
 
 $cui->set_binding(\&seek_right, KEY_RIGHT );
 $cui->set_binding(\&seek_left, KEY_LEFT );
