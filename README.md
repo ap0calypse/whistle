@@ -71,6 +71,7 @@ Thanks:
 -------
  - all the people testing and helping me to improve whistle :)
    (kmandla, matthew cox, smiszym, ...)
+ - all the supportive people of the arch-community :)
  - all developers behind mpg123, mplayer and mpv
  - all developers from Curses and Curses::UI
  - all developers from MP3::Info
