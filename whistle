@@ -474,6 +474,9 @@ sub stop {
     $state = 'Stopped';
     $TIMER->{'rest_time'} = 0;
     $TIMER->{'max_time'} = 0;
+    $progressbar->title("--:-- / --:--");
+    $progressbar->pos(0);
+    $progressbar->draw();
     ($file, $track, $art) = (undef, undef, undef);
     $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state");
     $curlist->draw();
