@@ -472,6 +472,9 @@ sub stop {
     print $Min "stop\n";
     alarm(0);
     $state = 'Stopped';
+    $TIMER->{'rest_time'} = 0;
+    $TIMER->{'max_time'} = 0;
+    ($file, $track, $art) = (undef, undef, undef);
     $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: $state");
     $curlist->draw();
 }
