@@ -253,7 +253,6 @@ sub quit_program {
     print $Min "quit\n";
     close $Min;
     close $Mout;
-    $cui->exit_curses();
     kill $MPLPID;
     exit(0);
 }
@@ -376,6 +375,17 @@ sub rem_dir {
     if (defined $selected) {
         @{$STORAGE->{'DIRS'}} = grep {!/^$selected$/} @{$STORAGE->{'DIRS'}};
         &rescan_dirs();
+    }
+    for my $plist (grep {!/^ALL$/} keys %{$STORAGE->{'PLAYLIST'}}) {
+        for my $md (keys %{$STORAGE->{'PLAYLIST'}{$plist}}) {
+            unless (grep {/$md/} keys %{$STORAGE->{'PLAYLIST'}{'ALL'}}) {
+                delete $STORAGE->{'PLAYLIST'}{$plist}{$md};
+                my %r_real = reverse %{$STORAGE->{'real_order'}{$plist}};
+                if (defined $r_real{$md}) {
+                    delete $STORAGE->{'real_order'}{$plist}{$r_real{$md}};
+                }
+            }
+        }
     }
 }
 
@@ -516,6 +526,19 @@ sub add_to_pl {
             $STORAGE->{'PLAYLIST'}{$selected}{$real_order->{$selected}{$_}} = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}};
         }
     }
+    my $pltxt;
+    $playlists->text('');
+    $playlists->draw();
+    $pltxt .= $CUR_LIST eq 'ALL' ? "[*] " : "[ ] ";
+    $pltxt .= "ALL";
+    $pltxt .= sprintf("  (%d)\n", scalar keys %{$STORAGE->{'PLAYLIST'}{'ALL'}});
+    for (grep {!/ALL/} sort keys %{$STORAGE->{'PLAYLIST'}}) {
+        $pltxt .= $CUR_LIST eq $_ ? "[*] " : "[ ] ";
+        $pltxt .= "\'-> $_";
+        $pltxt .= sprintf("  (%d)\n", scalar keys %{$STORAGE->{'PLAYLIST'}{$_}});
+    }
+    $playlists->text($pltxt);
+    $playlists->draw();
     &store_data();
 }
 
@@ -598,8 +621,8 @@ sub del_from_pl {
             delete $real_order->{$CUR_LIST}{$_};
         }
     }
+    &draw_menu();
     &store_data();
-    &draw_menu();    
 }
 
 sub band_switch {
