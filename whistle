@@ -151,7 +151,7 @@ my $progressbar = $win->add(
     -height => 3,
     -width => int ($win->width() / 2 - 1),
     -intellidraw => 1,
-    -title => ".: Progress :.",
+    -title => "--:-- / --:--",
     -border => 1,
 ) or die "progressbar";
 
@@ -161,6 +161,13 @@ $SIG{ALRM} = sub {
     $TIMER->{'rest_time'}--;
     my $one_perc = $TIMER->{'max_time'} / 100;
     my $new_pro = int(($TIMER->{'max_time'} - $TIMER->{'rest_time'}) / $one_perc);
+    my $diff = int($TIMER->{'max_time'} - $TIMER->{'rest_time'});
+    my $M_rest = int($diff / 60);
+    my $S_rest = int($diff % 60);
+    my $M_max = int($TIMER->{'max_time'} / 60);
+    my $S_max = int($TIMER->{'max_time'} % 60);
+    my $time_line = sprintf("%02d:%02d / %02d:%02d", $M_rest, $S_rest, $M_max, $S_max);
+    $progressbar->title($time_line);
     $progressbar->pos($new_pro);
     $progressbar->draw();
     if ($TIMER->{'rest_time'} <= 0) {
