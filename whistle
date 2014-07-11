@@ -507,6 +507,14 @@ sub pause {
     $curlist->draw();
 }
 
+sub delete_dups {
+    for my $rpl (keys %{$STORAGE->{'real_order'}}) {
+        my %rev_h = reverse %{$STORAGE->{'real_order'}{$rpl}};
+        %{$STORAGE->{'real_order'}{$rpl}} = reverse %rev_h;
+    }
+}
+
+
 # add currently selected track to playlist
 sub add_to_pl {
     my @num = $curlist->get();
@@ -535,6 +543,8 @@ sub add_to_pl {
             $STORAGE->{'PLAYLIST'}{$selected}{$real_order->{$selected}{$_}} = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}};
         }
     }
+    &store_data();
+    &delete_dups();
     my $pltxt;
     $playlists->text('');
     $playlists->draw();
@@ -548,7 +558,6 @@ sub add_to_pl {
     }
     $playlists->text($pltxt);
     $playlists->draw();
-    &store_data();
 }
 
 # switch playlist
