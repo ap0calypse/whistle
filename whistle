@@ -23,7 +23,7 @@ our $STORAGE;               # storage hashref
 our $SHUFFLE = 0;           # 0 = normal, 1 = random
 our $CUR_LIST = 'ALL';      # current playlist
 our $LAST_PLAYED = 0;
-our $real_order;
+#our $real_order;
 
 # vars for mplayer's 10band equalizer (allowed: -12 <-> 12)
 our @EQ = (0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0);
@@ -48,12 +48,12 @@ my $MPLPID = open2(my $Mout, my $Min, "$mplayer -idle -slave &> /dev/null") or d
 # read in data if available, otherwise initialise STORAGE hashref
 if (-e $STORFILE && (stat $STORFILE)[7] > 5) {
     $STORAGE = retrieve $STORFILE;
-    $real_order = $STORAGE->{'real_order'};
+#    $real_order = $STORAGE->{'real_order'};
 }
 else {
     $STORAGE = { 'DIRS' => [], 'PLAYLIST' => {}};
     $STORAGE->{'PLAYLIST'}{'ALL'} = {};
-    $STORAGE->{'real_order'} = {};
+#    $STORAGE->{'real_order'} = {};
 }
 
 # check for screen size
@@ -213,25 +213,26 @@ sub draw_menu {
     $pl_a = "$pl_a.$pl_a" . "s";
     $pl_al = "$pl_al.$pl_al" . "s";
     $pl_d = "$pl_d.$pl_d" . "s";
-
+    my $j = 0;
     if (%{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
-        for (sort keys %{$real_order->{$CUR_LIST}}) {
-            if (defined $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}}{'title'}) {
-                my $full_line = sprintf(" %$pl_t | %$pl_a | %$pl_al | %$pl_d",  $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}}{'title'}, 
-                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}}{'artist'}, 
-                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}}{'album'}, 
-                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}}{'duration'});
-                $pl{$_} = $full_line;
-            }
-        }
-        for (sort keys %pl) {
-            $curlist->insert_at($_, $pl{$_});
+
+
+        for (sort {$STORAGE->{'PLAYLIST'}{$CUR_LIST}{$a}{'artist'} cmp $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$b}{'artist'}} 
+             sort {$STORAGE->{'PLAYLIST'}{$CUR_LIST}{$a}{'album'} cmp $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$b}{'album'}} keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}}) {
+                my $full_line = sprintf(" %$pl_t | %$pl_a | %$pl_al | %$pl_d",  $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'title'}, 
+                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'artist'}, 
+                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'album'}, 
+                                                      $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'duration'});
+                $pl{$j} = $full_line;
+                $curlist->insert_at($j, $pl{$j});
+                $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} = $j;
+                $j++;
         }
     }
     else {
-        $curlist->values("no files found, please add a music directory");
+        $curlist->values("nothing found");
     }
-    $curlist->values(sort keys %pl);
+    $curlist->values(sort { $a <=> $b } keys %pl);
     $curlist->labels(\%pl);
     $curlist->draw();
     $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
@@ -242,7 +243,7 @@ sub draw_menu {
 
 # store the storage hashref to .whistle.dat
 sub store_data {
-    $STORAGE->{'real_order'} = $real_order;
+#    $STORAGE->{'real_order'} = $real_order;
     nstore($STORAGE, $STORFILE);
 }
 
@@ -263,7 +264,6 @@ sub found_mp3 {
     my $mime_long = describe($mime);
     if ($mime_long =~ m/^MP3 audio$/) {
         my $md5sum = md5_hex($File::Find::name);
-        $real_order->{'ALL'}{$num_songs} = $md5sum; 
         my $taghash = get_mp3tag($File::Find::name);
         my $infohash = get_mp3info($File::Find::name);
         my $esc_name = $File::Find::name;
@@ -280,7 +280,6 @@ sub found_mp3 {
     }
     elsif ($mime_long =~ m/^Ogg Audio$/) {
         my $md5sum = md5_hex($File::Find::name);
-        $real_order->{'ALL'}{$num_songs} = $md5sum; 
         my $ogg = Ogg::Vorbis::Header->new($File::Find::name);
         my $esc_name = $File::Find::name;
         $esc_name =~ s/ /\\ /g;
@@ -295,7 +294,6 @@ sub found_mp3 {
     }
     elsif ($mime_long =~ m/^FLAC audio$/) {
         my $md5sum = md5_hex($File::Find::name);
-        $real_order->{'ALL'}{$num_songs} = $md5sum; 
         my $flac = Audio::FLAC::Header->new($File::Find::name);
         my $info = $flac->info();
         my $tags = $flac->tags();
@@ -330,7 +328,6 @@ sub rescan_dirs {
     $cui->status('scanning directories, please be patient ...');
     $num_songs = 0;
     $STORAGE->{'PLAYLIST'}{'ALL'} = undef;
-    $STORAGE->{'real_order'}{'ALL'} = undef;
     if (scalar @{$STORAGE->{'DIRS'}}) {
         find(\&found_mp3, @{$STORAGE->{'DIRS'}});
     }
@@ -381,10 +378,6 @@ sub rem_dir {
         for my $md (keys %{$STORAGE->{'PLAYLIST'}{$plist}}) {
             unless (grep {/$md/} keys %{$STORAGE->{'PLAYLIST'}{'ALL'}}) {
                 delete $STORAGE->{'PLAYLIST'}{$plist}{$md};
-                my %r_real = reverse %{$STORAGE->{'real_order'}{$plist}};
-                if (defined $r_real{$md}) {
-                    delete $STORAGE->{'real_order'}{$plist}{$r_real{$md}};
-                }
             }
         }
     }
@@ -399,7 +392,6 @@ sub del_pl {
         unless ($pl_del eq "ALL") {
             if (exists $STORAGE->{'PLAYLIST'}{$pl_del}) {
                 delete $STORAGE->{'PLAYLIST'}{$pl_del};
-                delete $STORAGE->{'real_order'}{$pl_del};
             }
         }
     }
@@ -443,21 +435,24 @@ sub play {
         $curlist->set_selection($index);
         $LAST_PLAYED = $index;
     }
-    $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'filename'};
-    $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'title'} || '';
-    $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'artist'} || '';
-    $cur_pos = $index;
+    my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$cur$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
+    if (defined $msum) {
+        $file = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'filename'};
+        $track = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'title'} || '';
+        $art = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'artist'} || '';
+        $cur_pos = $index;
+    }
     if ($file) {
         $curlist->title("Playlist: $CUR_LIST ( S: $SHUFFLE ) :: Playing: " . $track . " by $art");
         $curlist->clear_selection();
         $curlist->draw();
-        print $Min "af equalizer=" . $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'eq'} . "\n";
-        @EQ = split /:/, $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'eq'};
+        print $Min "af equalizer=" . $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'eq'} . "\n";
+        @EQ = split /:/, $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'eq'};
         $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
                          sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
         $equalizer->draw();
         print $Min "loadfile $file\n";
-        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$cur}}{'duration_s'} || '0';
+        my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'duration_s'} || '0';
         $TIMER->{'rest_time'} = $altime;
         $TIMER->{'max_time'} = $altime;
         alarm(1);
@@ -507,13 +502,6 @@ sub pause {
     $curlist->draw();
 }
 
-sub delete_dups {
-    for my $rpl (keys %{$STORAGE->{'real_order'}}) {
-        my %rev_h = reverse %{$STORAGE->{'real_order'}{$rpl}};
-        %{$STORAGE->{'real_order'}{$rpl}} = reverse %rev_h;
-    }
-}
-
 
 # add currently selected track to playlist
 sub add_to_pl {
@@ -538,13 +526,12 @@ sub add_to_pl {
     $sel_pl->loose_focus();
     $win->delete('sel_pl');
     if (defined $selected) {
-        for (@num) {
-            $real_order->{$selected}{$_} = $real_order->{'ALL'}{$_};
-            $STORAGE->{'PLAYLIST'}{$selected}{$real_order->{$selected}{$_}} = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}};
+        for my $entry (@num) {
+        my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$entry$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
+            $STORAGE->{'PLAYLIST'}{$selected}{$msum} = $STORAGE->{'PLAYLIST'}{'ALL'}{$msum};
         }
     }
     &store_data();
-    &delete_dups();
     my $pltxt;
     $playlists->text('');
     $playlists->draw();
@@ -633,10 +620,10 @@ sub seek_left {
 sub del_from_pl {
     my @to_del = $curlist->get();
     return unless @to_del;
-    for (@to_del) {
-        if (exists $real_order->{$CUR_LIST}{$_} && exists $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}}) {
-            delete $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$real_order->{$CUR_LIST}{$_}};
-            delete $real_order->{$CUR_LIST}{$_};
+    for my $del (@to_del) {
+        my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$del$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
+        if (exists $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}) {
+            delete $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum};
         }
     }
     &draw_menu();
@@ -709,14 +696,16 @@ sub save_eq {
     $win->delete('sel_pl');
     if (defined $selected) {
         if ($selected == 1) {
-            for (@songs) {
-                $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}}{'eq'} = join ":", @EQ;
+            for my $song (@songs) {
+                my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$song$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
+                $STORAGE->{'PLAYLIST'}{'ALL'}{$msum}{'eq'} = join ":", @EQ;
             }
         }
         elsif ($selected == 2) {
-            for (@songs) {
-                my $album = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}}{'album'};
-                my $artist = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}}{'artist'};
+            for my $song (@songs) {
+                my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$song$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
+                my $album = $STORAGE->{'PLAYLIST'}{'ALL'}{$msum}{'album'};
+                my $artist = $STORAGE->{'PLAYLIST'}{'ALL'}{$msum}{'artist'};
                 for my $k (keys %{$STORAGE->{'PLAYLIST'}{'ALL'}}) {
                     if ($STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'album'} eq $album && $STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'artist'} eq $artist) {
                         $STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'eq'} = join ":", @EQ;
@@ -725,8 +714,9 @@ sub save_eq {
             }
         }
         elsif ($selected == 3) {
-            for (@songs) {
-                my $artist = $STORAGE->{'PLAYLIST'}{'ALL'}{$real_order->{$CUR_LIST}{$_}}{'artist'};
+            for my $song (@songs) {
+                my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$song$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
+                my $artist = $STORAGE->{'PLAYLIST'}{'ALL'}{$msum}{'artist'};
                 for my $k (keys %{$STORAGE->{'PLAYLIST'}{'ALL'}}) {
                     if ($STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'artist'} eq $artist) {
                         $STORAGE->{'PLAYLIST'}{'ALL'}{$k}{'eq'} = join ":", @EQ;
