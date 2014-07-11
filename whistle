@@ -330,6 +330,7 @@ sub rescan_dirs {
     $cui->status('scanning directories, please be patient ...');
     $num_songs = 0;
     $STORAGE->{'PLAYLIST'}{'ALL'} = undef;
+    $STORAGE->{'real_order'}{'ALL'} = undef;
     if (scalar @{$STORAGE->{'DIRS'}}) {
         find(\&found_mp3, @{$STORAGE->{'DIRS'}});
     }
@@ -387,6 +388,7 @@ sub rem_dir {
             }
         }
     }
+    &draw_menu();
 }
 
 # func: del_pl
@@ -397,6 +399,7 @@ sub del_pl {
         unless ($pl_del eq "ALL") {
             if (exists $STORAGE->{'PLAYLIST'}{$pl_del}) {
                 delete $STORAGE->{'PLAYLIST'}{$pl_del};
+                delete $STORAGE->{'real_order'}{$pl_del};
             }
         }
     }
