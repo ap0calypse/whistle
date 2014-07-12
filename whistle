@@ -23,7 +23,6 @@ our $STORAGE;               # storage hashref
 our $SHUFFLE = 0;           # 0 = normal, 1 = random
 our $CUR_LIST = 'ALL';      # current playlist
 our $LAST_PLAYED = 0;
-#our $real_order;
 
 # vars for mplayer's 10band equalizer (allowed: -12 <-> 12)
 our @EQ = (0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0);
@@ -48,12 +47,10 @@ my $MPLPID = open2(my $Mout, my $Min, "$mplayer -idle -slave &> /dev/null") or d
 # read in data if available, otherwise initialise STORAGE hashref
 if (-e $STORFILE && (stat $STORFILE)[7] > 5) {
     $STORAGE = retrieve $STORFILE;
-#    $real_order = $STORAGE->{'real_order'};
 }
 else {
     $STORAGE = { 'DIRS' => [], 'PLAYLIST' => {}};
     $STORAGE->{'PLAYLIST'}{'ALL'} = {};
-#    $STORAGE->{'real_order'} = {};
 }
 
 # check for screen size
@@ -243,7 +240,6 @@ sub draw_menu {
 
 # store the storage hashref to .whistle.dat
 sub store_data {
-#    $STORAGE->{'real_order'} = $real_order;
     nstore($STORAGE, $STORFILE);
 }
 
