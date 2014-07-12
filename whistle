@@ -27,7 +27,7 @@ our $LAST_PLAYED = 0;
 # vars for mplayer's 10band equalizer (allowed: -12 <-> 12)
 our @EQ = (0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0 ,0.0);
 
-my ($dir_rem, $pl_add, $pl_del, $sel_pl);
+my ($dir_rem, $pl_add, $sel_pl);
 my $num_songs = 0;
 our $MAX_PL;
 our $STATE = 0;
@@ -321,7 +321,7 @@ sub add_dir {
 # rescan collection
 my $wait;
 sub rescan_dirs {
-    $cui->status('scanning directories, please be patient ...');
+    $cui->status('\m/ scanning directories, please be patient ... \m/');
     $num_songs = 0;
     $STORAGE->{'PLAYLIST'}{'ALL'} = undef;
     if (scalar @{$STORAGE->{'DIRS'}}) {
@@ -335,10 +335,12 @@ sub rescan_dirs {
 # func: new_pl
 # creates a new playlist with an empty hashref ready for filling
 sub new_pl {
-    $pl_add = $cui->question('Please enter a name (a-zA-Z0-9_) for the new playlist');
-    if ($pl_add =~ m/^[a-zA-Z0-9_]+$/ && length $pl_add) {
-        unless (grep {/^$pl_add$/} keys %{$STORAGE->{'PLAYLIST'}}) {
-            $STORAGE->{'PLAYLIST'}{$pl_add} = {};
+    $pl_add = $cui->question('NEW playlist: choose name (a-zA-Z0-9_)');
+    if (defined $pl_add) {
+        if ($pl_add =~ m/^[a-zA-Z0-9_]+$/ && length $pl_add > 0 && $pl_add ne 'ALL') {
+            unless (grep {/^$pl_add$/} keys %{$STORAGE->{'PLAYLIST'}}) {
+                $STORAGE->{'PLAYLIST'}{$pl_add} = {};
+            }
         }
     }
     &store_data();
@@ -360,7 +362,7 @@ sub rem_dir {
             -border => 1,
             -ipad => 2,
     );
-    $rem->title('Please choose the directory, and press TAB');
+    $rem->title('DELETE directory: choose and press TAB');
     $rem->draw();
     $rem->modalfocus();
     my $selected = $rem->get();
@@ -383,13 +385,26 @@ sub rem_dir {
 # func: del_pl
 # deletes a playlist. the 'ALL' playlist must not be deleted!
 sub del_pl {
-    $pl_del = $cui->question('Please enter the name of the playlist you want to delete');
-    if (defined $pl_del) {
-        unless ($pl_del eq "ALL") {
-            if (exists $STORAGE->{'PLAYLIST'}{$pl_del}) {
-                delete $STORAGE->{'PLAYLIST'}{$pl_del};
-            }
-        }
+    my $del = $win->add(
+            'del', 'Listbox',
+            -values    => [grep {!/^ALL$/} keys %{$STORAGE->{'PLAYLIST'}}],
+            -radio     => 1,
+            -y => int ($win->height() / 2),
+            -x => int ($win->width() / 3) + 1,
+            -focusable => 1,
+            -height => 10,
+            -width => 60,
+            -border => 1,
+            -ipad => 2,
+    );
+    $del->title('DELETE playlist: choose and press TAB');
+    $del->draw();
+    $del->modalfocus();
+    my $pl_del = $del->get();
+    $del->loose_focus();
+    $win->delete('del');
+    if (defined $pl_del && exists $STORAGE->{'PLAYLIST'}{$pl_del}) {
+        delete $STORAGE->{'PLAYLIST'}{$pl_del};
     }
     &store_data();
     &draw_menu();
@@ -515,7 +530,7 @@ sub add_to_pl {
             -border => 1,
             -ipad => 2,
     );
-    $sel_pl->title('Please choose the playlist, and press TAB');
+    $sel_pl->title('ADD to playlist: choose playlist and press TAB');
     $sel_pl->draw();
     $sel_pl->modalfocus();
     my $selected = $sel_pl->get();
@@ -557,7 +572,7 @@ sub switch_pl {
             -border => 1,
             -ipad => 2,
     );
-    $sel_pl->title('Please choose the playlist, and press TAB');
+    $sel_pl->title('SWITCH playlist: choose and press TAB');
     $sel_pl->draw();
     $sel_pl->modalfocus();
     my $selected = $sel_pl->get();
@@ -681,7 +696,7 @@ sub save_eq {
             -border => 1,
             -ipad => 2,
     );
-    $choose->title('I want to save this equalizer settings for:');
+    $choose->title('SAVE eq settings for: (press TAB afterwards):');
 
     $choose->values(sort keys %choo);
     $choose->labels(\%choo);
