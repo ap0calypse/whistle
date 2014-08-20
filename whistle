@@ -369,14 +369,11 @@ sub rem_dir {
     $rem->loose_focus();
     $win->delete('rem');
     if ($selected) {
-        if ($selected eq 'CANCEL') {
-            &draw_menu();
-        }
-        else {
+        if ($selected ne 'CANCEL') {
             my @new_dirs = grep {!/^$selected$/} @{$STORAGE->{'DIRS'}};
             @{$STORAGE->{'DIRS'}} = @new_dirs;
+            &rescan_dirs();
         }
-        &rescan_dirs();
     }
     for my $plist (grep {!/^ALL$/} keys %{$STORAGE->{'PLAYLIST'}}) {
         for my $md (keys %{$STORAGE->{'PLAYLIST'}{$plist}}) {
