@@ -352,8 +352,7 @@ sub new_pl {
 sub rem_dir {
     my $rem = $win->add(
             'rem', 'Listbox',
-            -values    => [@{$STORAGE->{'DIRS'}}],
-            -radio     => 1,
+            -multi     => 0,
             -y => int ($win->height() / 2),
             -x => int ($win->width() / 3) + 1,
             -focusable => 1,
@@ -362,14 +361,21 @@ sub rem_dir {
             -border => 1,
             -ipad => 2,
     );
-    $rem->title('DELETE directory: choose and press TAB');
+    $rem->values(@{$STORAGE->{'DIRS'}}, 'CANCEL');
+    $rem->title('DELETE directory: choose dir (or cancel) and press TAB');
     $rem->draw();
     $rem->modalfocus();
     my $selected = $rem->get();
     $rem->loose_focus();
     $win->delete('rem');
-    if (defined $selected) {
-        @{$STORAGE->{'DIRS'}} = grep {!/^$selected$/} @{$STORAGE->{'DIRS'}};
+    if ($selected) {
+        if ($selected eq 'CANCEL') {
+            &draw_menu();
+        }
+        else {
+            my @new_dirs = grep {!/^$selected$/} @{$STORAGE->{'DIRS'}};
+            @{$STORAGE->{'DIRS'}} = @new_dirs;
+        }
         &rescan_dirs();
     }
     for my $plist (grep {!/^ALL$/} keys %{$STORAGE->{'PLAYLIST'}}) {
