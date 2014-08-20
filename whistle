@@ -353,13 +353,13 @@ sub rem_dir {
     my $rem = $win->add(
             'rem', 'Listbox',
             -multi     => 0,
-            -y => int ($win->height() / 2),
+            -y => int ($win->height() / 2) - 4,
             -x => int ($win->width() / 3) + 1,
             -focusable => 1,
-            -height => 10,
+            -height => 15,
             -width => 60,
             -border => 1,
-            -ipad => 2,
+            -ipad => 3,
     );
     $rem->values(@{$STORAGE->{'DIRS'}}, 'CANCEL');
     $rem->title('DELETE directory: choose dir (or cancel) and press TAB');
@@ -390,17 +390,17 @@ sub rem_dir {
 sub del_pl {
     my $del = $win->add(
             'del', 'Listbox',
-            -values    => [grep {!/^ALL$/} keys %{$STORAGE->{'PLAYLIST'}}],
-            -radio     => 1,
-            -y => int ($win->height() / 2),
+            -values    => [grep {!/^ALL$/} keys %{$STORAGE->{'PLAYLIST'}}, 'CANCEL'],
+            -multi     => 0,
+            -y => int ($win->height() / 2) - 4,
             -x => int ($win->width() / 3) + 1,
             -focusable => 1,
-            -height => 10,
+            -height => 15,
             -width => 60,
             -border => 1,
-            -ipad => 2,
+            -ipad => 3,
     );
-    $del->title('DELETE playlist: choose and press TAB');
+    $del->title('DELETE playlist: choose list (or cancel) and press TAB');
     $del->draw();
     $del->modalfocus();
     my $pl_del = $del->get();
