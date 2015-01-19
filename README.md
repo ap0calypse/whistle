@@ -1,5 +1,3 @@
-README - whistle
-
 About:
 ------
 
@@ -41,7 +39,8 @@ What works? a.k.a. Features:
         - playlists
         - multi-select for playlist-editing
         - better and finer granulated equalizer (10 band)
-        - per-song/album-equalizer (meaning: individual equalizer settings for each title/album/artist)
+        - per-song/album-equalizer (meaning: individual equalizer settings 
+          for each title/album/artist)
 
 
 What's to come?
@@ -51,7 +50,6 @@ What's to come?
         - shuffle by artist/album
         - equalizer presets
         - color support
-        - tab completition
         - mp3 tag write support
         - burn playlist 2 iso or cd
         - ...
@@ -80,11 +78,11 @@ Thanks:
  
 
 
-If you really like this tool, feel free to tip me via [Gittip][tip].
+If you really like this tool, feel free to tip me via [Gratipay][tip].
 
-[![Gittip](http://img.shields.io/gittip/ap0calypse.svg)](https://www.gittip.com/ap0calypse/)
+[![Gratipay](http://img.shields.io/gittip/ap0calypse.svg)](https://www.gratipay.com/ap0calypse/)
 
-[tip]:https://www.gittip.com/ap0calypse/
+[tip]:https://www.gratipay.com/ap0calypse/
 
 or, if you want to give me some crypto-credit, please use this adress:
 
