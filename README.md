@@ -86,7 +86,6 @@ If you really like this tool, feel free to tip me via [Gittip][tip].
 
 [tip]:https://www.gittip.com/ap0calypse/
 
-or, if you want to give me some crypto-credit, please use this adresses:
+or, if you want to give me some crypto-credit, please use this adress:
 
-  - BitCoin:    184RfWXUwxyniuQAySKjNujk1JvAkQnMsN
-  - DogeCoin:   D7t9Vwf7ScLuUmsyn8wk3VPeUd7xBswViA
+  - DogeCoin:   DGA1bAaftiYCT1ndTLzHMmyty9rs8bPmFR
