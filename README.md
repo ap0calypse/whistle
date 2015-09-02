@@ -35,6 +35,7 @@ Installation:
 -------------
 
 ArchLinux:
+
     packer -S mplayer perl-ogg-vorbis-header perl-audio-flac-header perl-mp3-info perl-curses-ui perl-file-mimeinfo whistle-git
     
 (you maybe need to replace 'packer' with your custom AUR-helper (yaourt, clyde, ...)
