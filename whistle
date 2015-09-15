@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Curses::UI;
 use MP3::Info;
-use Ogg::Vorbis::Header;
+use Ogg::Vorbis::Header::PurePerl;
 use Audio::FLAC::Header;
 use Storable qw(nstore retrieve);
 use File::Find;
@@ -276,7 +276,7 @@ sub found_mp3 {
     }
     elsif ($mime_long =~ m/^Ogg Audio$/) {
         my $md5sum = md5_hex($File::Find::name);
-        my $ogg = Ogg::Vorbis::Header->new($File::Find::name);
+        my $ogg = Ogg::Vorbis::Header::PurePerl->new($File::Find::name);
         my $esc_name = $File::Find::name;
         $esc_name =~ s/ /\\ /g;
         $STORAGE->{'PLAYLIST'}{'ALL'}{$md5sum}{'filename'} = $esc_name;
