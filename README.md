@@ -23,7 +23,7 @@ Perl Modules:
         - MP3::Info                     (archlinux-package: perl-mp3-info)
         - Curses::UI                    (archlinux-package: perl-curses-ui)
         - File::MimeInfo                (archlinux-package: perl-file-mimeinfo)
-        - Ogg::Vorbis::Header::PurePerl (aur-package: perl-ogg-vorbis-header)
+        - Ogg::Vorbis::Header::PurePerl (aur-package: perl-ogg-vorbis-header-pureperl)
         - Audio::FLAC::Header           (aur-package: perl-audio-flac-header)
 
 Programs:
