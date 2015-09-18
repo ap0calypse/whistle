@@ -20,11 +20,11 @@ Prerequisites:
 
 Perl Modules:
     
-        - MP3::Info           (archlinux-package: perl-mp3-info)
-        - Curses::UI          (archlinux-package: perl-curses-ui)
-        - File::MimeInfo      (archlinux-package: perl-file-mimeinfo)
-        - Ogg::Vorbis::Header (aur-package: perl-ogg-vorbis-header)
-        - Audio::FLAC::Header (aur-package: perl-audio-flac-header)
+        - MP3::Info                     (archlinux-package: perl-mp3-info)
+        - Curses::UI                    (archlinux-package: perl-curses-ui)
+        - File::MimeInfo                (archlinux-package: perl-file-mimeinfo)
+        - Ogg::Vorbis::Header::PurePerl (aur-package: perl-ogg-vorbis-header)
+        - Audio::FLAC::Header           (aur-package: perl-audio-flac-header)
 
 Programs:
 
@@ -36,7 +36,7 @@ Installation:
 
 ArchLinux:
 
-    packer -S mplayer perl-ogg-vorbis-header perl-audio-flac-header perl-mp3-info perl-curses-ui perl-file-mimeinfo whistle-git
+    packer -S mplayer perl-ogg-vorbis-header-pureperl perl-audio-flac-header perl-mp3-info perl-curses-ui perl-file-mimeinfo whistle-git
     
 (you maybe need to replace 'packer' with your custom AUR-helper (yaourt, clyde, ...)
 
