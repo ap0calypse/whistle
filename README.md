@@ -45,11 +45,7 @@ Debian:
 
     1. apt-get install git mplayer libncurses-ui-perl libmp3-info-perl libogg-vorbis-header-pureperl-perl libaudio-flac-header-perl libfile-mimeinfo-perl
     2. clone the git repository: (git clone https://github.com/ap0calypse/whistle.git)
-    3. From here on, you have 2 options:
-        a. you either install the Perl-module for Ogg-Vorbis-Header via CPAN
-        b. you run the following command in the cloned repository to make whistle use the Ogg-Vorbis-Header-PurePerl module 
-        -> sed -i 's/Ogg::Vorbis::Header/Ogg::Vorbis::Header::PurePerl/g' whistle
-    4. run whistle and enjoy :)
+    3. run whistle and enjoy :)
 
 Slackware:
 
@@ -77,11 +73,7 @@ Unfortunately, there is no prepackaged version of whistle for Slackware, but it 
         - perl-file-desktopentry
         - perl-file-mimeinfo
     4. clone the git repository: (git clone https://github.com/ap0calypse/whistle.git)
-    5. From here on, you have 2 options:
-        a. you either install the Perl-module for Ogg-Vorbis-Header via CPAN
-        b. you run the following command in the cloned repository to make whistle use the Ogg-Vorbis-Header-PurePerl module 
-        -> sed -i 's/Ogg::Vorbis::Header/Ogg::Vorbis::Header::PurePerl/g' whistle
-    6. run whistle and enjoy :)
+    5. run whistle and enjoy :)
 
 
 What works? a.k.a. Features:
