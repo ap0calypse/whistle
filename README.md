@@ -34,20 +34,20 @@ Programs:
 Installation:
 -------------
 
-ArchLinux:
+###ArchLinux:
 
     packer -S mplayer perl-ogg-vorbis-header-pureperl perl-audio-flac-header perl-mp3-info perl-curses-ui perl-file-mimeinfo whistle-git
     
 (you maybe need to replace 'packer' with your custom AUR-helper (yaourt, clyde, ...)
 
 
-Debian:
+###Debian:
 
     1. apt-get install git mplayer libncurses-ui-perl libmp3-info-perl libogg-vorbis-header-pureperl-perl libaudio-flac-header-perl libfile-mimeinfo-perl
     2. clone the git repository: (git clone https://github.com/ap0calypse/whistle.git)
     3. run whistle and enjoy :)
 
-Slackware:
+###Slackware:
 
 Whistle can be installed following these steps (all listed packages are either needed by whistle or are dependencies of each other) :
 
