@@ -53,7 +53,7 @@ Unfortunately, there is no prepackaged version of whistle for Slackware, but it 
 
     1. install sbopkg (http://www.sbopkg.org/downloads.php,-> installpkg sbopkg-version-noarch-1_cng.tgz) to install custom libs and programs
     2. run sbopkg and sync with slackbuilds.org (Sync with remote repository)
-    3. install the following perl-packages:
+    3. install the following packages:
         - perl-Audio-FLAC-Header
         - perl-Curses
         - perl-Curses-UI
@@ -72,8 +72,8 @@ Unfortunately, there is no prepackaged version of whistle for Slackware, but it 
         - perl-file-basedir
         - perl-file-desktopentry
         - perl-file-mimeinfo
-    4. clone the git repository: (git clone https://github.com/ap0calypse/whistle.git)
-    5. run whistle and enjoy :)
+        - whistle
+    4. run whistle and enjoy :)
 
 
 What works? a.k.a. Features:
