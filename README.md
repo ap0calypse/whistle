@@ -36,14 +36,18 @@ Installation:
 
 ###ArchLinux:
 
-    packer -S mplayer perl-ogg-vorbis-header-pureperl perl-audio-flac-header perl-mp3-info perl-curses-ui perl-file-mimeinfo whistle-git
+    packer -S mplayer perl-ogg-vorbis-header-pureperl \
+              perl-audio-flac-header perl-mp3-info perl-curses-ui \
+              perl-file-mimeinfo whistle-git
     
 (you maybe need to replace 'packer' with your custom AUR-helper (yaourt, clyde, ...)
 
 
 ###Debian:
 
-    1. apt-get install git mplayer libncurses-ui-perl libmp3-info-perl libogg-vorbis-header-pureperl-perl libaudio-flac-header-perl libfile-mimeinfo-perl
+    1. apt-get install git mplayer libncurses-ui-perl \
+                       libmp3-info-perl libogg-vorbis-header-pureperl-perl \
+                       ibaudio-flac-header-perl libfile-mimeinfo-perl
     2. clone the git repository: (git clone https://github.com/ap0calypse/whistle.git)
     3. run whistle and enjoy :)
 
@@ -51,7 +55,8 @@ Installation:
 
 Whistle can be installed following these steps (all listed packages are either needed by whistle or are dependencies of each other) :
 
-    1. install sbopkg (http://www.sbopkg.org/downloads.php,-> installpkg sbopkg-version-noarch-1_cng.tgz) to install custom libs and programs
+    1. install sbopkg (http://www.sbopkg.org/downloads.php,-> 
+       # installpkg sbopkg-version-noarch-1_cng.tgz)
     2. run sbopkg and sync with slackbuilds.org (Sync with remote repository)
     3. install the following packages:
         - perl-Audio-FLAC-Header
