@@ -49,7 +49,7 @@ Debian:
 
 Slackware:
 
-Unfortunately, there is no prepackaged version of whistle for Slackware, but it can be installed following these steps (all listed packages are either needed by whistle or are dependencies of each other) :
+Whistle can be installed following these steps (all listed packages are either needed by whistle or are dependencies of each other) :
 
     1. install sbopkg (http://www.sbopkg.org/downloads.php,-> installpkg sbopkg-version-noarch-1_cng.tgz) to install custom libs and programs
     2. run sbopkg and sync with slackbuilds.org (Sync with remote repository)
