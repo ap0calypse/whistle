@@ -11,6 +11,7 @@ use IPC::Open2;
 use Curses qw(KEY_LEFT KEY_RIGHT KEY_F getmaxyx initscr endwin);
 use File::MimeInfo qw(mimetype describe);
 use Digest::MD5 qw(md5_hex);
+use LWP::UserAgent;
 
 # project:          whistle
 # author:           see AUTHORS
@@ -59,8 +60,8 @@ my ($row, $col);
 getmaxyx($row, $col);
 endwin();
 
-print "your terminal windows' height is too low! (26 rows needed, you have $row)\n" and exit(0) if $row < 26;
-print "your terminal windows' length is too low! (105 cols needed, you have $col)\n" and exit(0) if $col < 105;
+print "your terminal windows' height is too low! (20 rows needed, you have $row)\n" and exit(0) if $row < 20;
+print "your terminal windows' length is too low! (80 cols needed, you have $col)\n" and exit(0) if $col < 80;
 
 # create the main ui and main window
 my $cui = new Curses::UI ( -clear_on_exit => 0, -color_support => 1);
@@ -74,13 +75,12 @@ my $curlist = $win->add(
     -multi => 1,
     -title => "Playlist: $CUR_LIST",
     -readonly => 1,
-    -y => 5,
-    -x => int ($win->width() / 3) + 1,
+    -y => 0,
+    -x => 52,
     -focusable => 1,
     -nocursor => 0,
     -vscrollbar => 'right',
     -wrapping => 1,
-    -width => int ($win->width() * 0.66),
     -intellidraw => 1,
     -border => 1,
     -ipad => 1,
@@ -91,62 +91,78 @@ my $curlist = $win->add(
 my $equalizer = $win->add( 
     'controls', 'TextViewer',
     -fg => 'white',
-    -title => ".: Equalizer :. (Use F1-F10 to configure)",
+    -title => "Equalizer (F1-F10)",
     -readonly => 1,
-    -y => 1,
-    -x => 1,
+    -y => 3,
+    -x => 25,
     -focusable => 0,
     -wrapping => 0,
-    -height => 4,
-    -width => int ($win->width() / 2),
+    -height => 6,
+    -width => 27, 
     -intellidraw => 1,
     -border => 1,
 ) or die "controls";
+
+# lyrics window, 
+my $lyrics = $win->add( 
+    'lyrics', 'TextViewer',
+    -fg => 'white',
+    -title => "Lyrics (L)",
+    -readonly => 1,
+    -y => 16,
+    -x => 0,
+    -focusable => 1,
+    -wrapping => 1,
+    -vscrollbar => 'right',
+    -width => 52, # thats the width, period, nothing more, nothing less
+    -intellidraw => 1,
+    -border => 1,
+) or die "lyrics";
 
 # create playlist 'window'
 my $playlists = $win->add( 
     'playlists', 'TextViewer',
     -fg => 'white',
-    -title => ".: Playlists :. ('h' -> help)",
+    -title => "Playlists",
     -readonly => 1,
-    -y => 5,
-    -x => 1,
+    -y => 0,
+    -x => 0,
     -focusable => 0,
-    -wrapping => 1,
-    -height => 14,
-    -width => int ($win->width() / 3),
+    -wrapping => 0,
+    -height => 16,
+    -width => 25,
     -intellidraw => 1,
     -border => 1,
-    -ipad => 1,
+    -ipad => 0,
 ) or die "playlists";
 
 # create directory 'window'
 my $directories = $win->add( 
     'directories', 'TextViewer',
     -fg => 'white',
-    -title => ".: Directories :.",
+    -title => "Directories",
     -readonly => 1,
-    -y => 19,
-    -x => 1,
+    -y => 9,
+    -x => 25,
     -focusable => 0,
     -wrapping => 1,
-    -height => 8,
-    -width => int ($win->width() / 3),
+    -height => 7,
+    -width => 27,
     -intellidraw => 1,
     -border => 1,
-    -ipad => 1,
+    -ipad => 0,
 ) or die "directories";
 
 my $progressbar = $win->add(
     'progress', 'Progressbar',
     -max       => 100,
     -pos       => 0,
-    -y => 1,
-    -x => int($win->width() / 2 + 1),
+    -y => 0,
+    -x => 25,
     -focusable => 0,
     -wrapping => 1,
     -height => 3,
-    -width => int ($win->width() / 2 - 1),
+    -width => 27,
     -intellidraw => 1,
     -title => "--:-- / --:--",
     -border => 1,
@@ -232,10 +248,11 @@ sub draw_menu {
     $curlist->values(sort { $a <=> $b } keys %pl);
     $curlist->labels(\%pl);
     $curlist->draw();
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d\n", 1 .. 5) . sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ[0..4]) . 
+                     sprintf("%4d %4d %4d %4d %4d\n", 6 .. 10) . sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ[5..9]));
     $equalizer->draw();
     $progressbar->draw();
+    $lyrics->draw();
 }
 
 # store the storage hashref to .whistle.dat
@@ -462,8 +479,8 @@ sub play {
         $curlist->draw();
         print $Min "af equalizer=" . $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'eq'} . "\n";
         @EQ = split /:/, $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'eq'};
-        $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                         sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+        $equalizer->text(sprintf("%4d %4d %4d %4d %4d\n", 1 .. 5) . sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ[0..4]) . 
+                         sprintf("%4d %4d %4d %4d %4d\n", 6 .. 10) . sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ[5..9]));
         $equalizer->draw();
         print $Min "loadfile $file\n";
         my $altime = $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$msum}{'duration_s'} || '0';
@@ -644,6 +661,38 @@ sub del_from_pl {
     &store_data();
 }
 
+sub get_lyrics {
+    my $search = "$art $track";
+    my $url = "http://www.elyrics.net/find.php";
+    my $ua       = LWP::UserAgent->new();
+    my $response = $ua->post( $url, { 'q' => $search } );
+    my $content  = $response->decoded_content();
+
+    my $link;
+    my $final;
+
+    if ($content =~ m/.+<A href="(\/read\/.+?\.html)".+/gm) {
+        $link = $1;
+    }
+    if ($link) {
+        $response = $ua->get("http://www.elyrics.net$link");
+        $content = $response->decoded_content();
+
+        if ($content =~ m/.+<div id='inlyr' style='font-size:14px;'>(.+?)<p><form action="\/submit_lyrics.php".+/gms) {
+            $final = $1;
+        }
+    }
+    unless ($final) {
+            $final = "not found!";
+    }
+    $final =~ s/<br>//gms;
+    $lyrics->title("$art - $track");
+    $lyrics->text($final);
+    $lyrics->draw();
+}
+
+
+
 sub band_switch {
     my ($band) = @_;
     my @freq = ("31.25Hz", "62.50Hz", "125.0Hz", "250.0Hz", "500.0Hz",
@@ -651,9 +700,8 @@ sub band_switch {
 
     my $new_val = $cui->question("Please enter the new value for freq: $freq[$band] (currently $EQ[$band]dB)");
     $EQ[$band] = sprintf ("%4.1f", $new_val) if ((defined $new_val && $new_val == 0 ) || (defined $new_val && $new_val <= 12.0 && $new_val >= -12.0));
-
-    $equalizer->text(sprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d %4d\n", 1 .. 10) .
-                     sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ));
+    $equalizer->text(sprintf("%4d %4d %4d %4d %4d\n", 1 .. 5) . sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ[0..4]) . 
+                     sprintf("%4d %4d %4d %4d %4d\n", 6 .. 10) . sprintf("%4.1f %4.1f %4.1f %4.1f %4.1f\n", @EQ[5..9]));
     $equalizer->draw();
     my $eq_str = join ":", @EQ;
     print $Min "af equalizer=$eq_str\n";
@@ -771,6 +819,7 @@ $cui->set_binding(\&stop, "S" );
 $cui->set_binding(\&rescan_dirs, "e" );
 $cui->set_binding(\&save_eq, "v" );
 $cui->set_binding(\&jump, "j" );
+$cui->set_binding(\&get_lyrics, "L" );
 
 $cui->set_binding(\&seek_right, KEY_RIGHT );
 $cui->set_binding(\&seek_left, KEY_LEFT );

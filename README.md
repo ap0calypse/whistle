@@ -91,6 +91,7 @@ What works? a.k.a. Features:
         - better and finer granulated equalizer (10 band)
         - per-song/album-equalizer (meaning: individual equalizer settings 
           for each title/album/artist)
+        - lyrics fetching support
 
 
 What's to come?
@@ -131,4 +132,4 @@ Thanks:
 
 If you want to give me some crypto-credit, please use this adress:
 
-  - DogeCoin:   DGA1bAaftiYCT1ndTLzHMmyty9rs8bPmFR
+  - DogeCoin:   D6ZEvKSEKz85iiLbQ9BUEoEXcdUQXLnK6w
