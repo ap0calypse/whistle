@@ -719,7 +719,7 @@ sub b9_switch  { &band_switch(8); }
 sub b10_switch { &band_switch(9); }
 
 sub help {
-    $cui->dialog("P - play selected song\n" .
+    $cui->dialog("P - play selected song\n" . "L - show lyrics\n" .
                  "p - pause\n" . "n - play next song\n" . "r - play previous song\n" .
                  "j - jump to currently playing song\n" . 
                  "S - stop playing\n". "t - toggle shuffle\n" . "e - rescan directories\n" .

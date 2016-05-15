@@ -25,6 +25,7 @@ Perl Modules:
         - File::MimeInfo                (archlinux-package: perl-file-mimeinfo)
         - Ogg::Vorbis::Header::PurePerl (aur-package: perl-ogg-vorbis-header-pureperl)
         - Audio::FLAC::Header           (aur-package: perl-audio-flac-header)
+        - LWP::UserAgent
 
 Programs:
 
