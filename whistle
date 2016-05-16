@@ -663,27 +663,47 @@ sub del_from_pl {
 
 sub get_lyrics {
     my $search = "$art $track";
-    my $url = "http://www.elyrics.net/find.php";
+    my $bkupurl = "http://www.elyrics.net/find.php";
+    my $url = "http://search.azlyrics.com/search.php?q=$search";
     my $ua       = LWP::UserAgent->new();
-    my $response = $ua->post( $url, { 'q' => $search } );
+    my $response = $ua->get( $url);
     my $content  = $response->decoded_content();
-
+    
     my $link;
     my $final;
 
-    if ($content =~ m/.+<A href="(\/read\/.+?\.html)".+/gm) {
+    if ($content =~ m/1\. <a href="(.+?\.html)".+/gm) {
         $link = $1;
     }
     if ($link) {
-        $response = $ua->get("http://www.elyrics.net$link");
+        $response = $ua->get("$link");
         $content = $response->decoded_content();
 
-        if ($content =~ m/.+<div id='inlyr' style='font-size:14px;'>(.+?)<p><form action="\/submit_lyrics.php".+/gms) {
-            $final = $1;
+        if ($content =~ m/.+<div>.+?<!-- Usage.+?-->(.+?)<\/div>.+/gms) {
+            $final = "Lyrics from azlyrics.com\n";
+            $final .= $1;
         }
     }
     unless ($final) {
-            $final = "not found!";
+        # let's try again
+        my $response = $ua->post( $bkupurl, { 'q' => $search } );
+        my $content  = $response->decoded_content();
+
+        if ($content =~ m/.+<A href="(\/read\/.+?\.html)".+/gm) {
+            $link = $1;
+        }
+        if ($link) {
+            $response = $ua->get("http://www.elyrics.net$link");
+            $content = $response->decoded_content();
+
+            if ($content =~ m/.+<div id='inlyr' style='font-size:14px;'>(.+?)<p><form action="\/submit_lyrics.php".+/gms) {
+                $final = "Lyrics from elyrics.net\n\n";
+                $final .= $1;
+            }
+        }
+    }
+    unless ($final) {
+        $final = "not found";
     }
     $final =~ s/<br>//gms;
     $lyrics->title("$art - $track");
