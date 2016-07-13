@@ -871,9 +871,6 @@ sub enqueue {
     }
     push @QUEUE, $msum;
     $Q2INDEX{$msum} = $id;
-    open my $QFD, ">> /tmp/queue.log";
-    print $QFD "pushed $msum to queue\n";
-    close $QFD;
     &draw_queue();
     $curlist->clear_selection();
     $curlist->draw();
@@ -889,9 +886,6 @@ sub dequeue {
     }
     @QUEUE = @NEW_Q;
     delete $Q2INDEX{$msum} if exists $Q2INDEX{$msum};
-    open my $QFD, ">> /tmp/queue.log";
-    print $QFD "deleted $msum from queue\n";
-    close $QFD;
     &draw_queue();
     $curlist->clear_selection();
     $curlist->draw();
