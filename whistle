@@ -32,6 +32,8 @@ my ($dir_rem, $pl_add, $sel_pl);
 my $num_songs = 0;
 our $MAX_PL;
 our $STATE = 0;
+our @QUEUE = ();
+our %Q2INDEX;
 
 # turn on autoflush
 $| = 1;
@@ -42,7 +44,7 @@ chomp( my( $mplayer ) = <$WHICH> );
 close( $WHICH );
 
 # open read and write handles for mpv
-my $MPLPID = open2(my $Mout, my $Min, "$mplayer -cache 4096 -idle -slave &> /dev/null") or die "mplayer hates me :(";
+my $MPLPID = open2(my $Mout, my $Min, "$mplayer -cache-min 10 -idle -slave &> /dev/null") or die "mplayer hates me :(";
 
 
 # read in data if available, otherwise initialise STORAGE hashref
@@ -115,9 +117,25 @@ my $lyrics = $win->add(
     -wrapping => 1,
     -vscrollbar => 'right',
     -width => 52, # thats the width, period, nothing more, nothing less
+    -height => 14,
     -intellidraw => 1,
     -border => 1,
 ) or die "lyrics";
+
+my $queue = $win->add( 
+    'queue', 'TextViewer',
+    -fg => 'white',
+    -title => "Queue (+/-)",
+    -readonly => 1,
+    -y => 30,
+    -x => 0,
+    -focusable => 0,
+    -wrapping => 1,
+    -vscrollbar => 'right',
+    -width => 52, # thats the width, period, nothing more, nothing less
+    -intellidraw => 1,
+    -border => 1,
+) or die "queue";
 
 # create playlist 'window'
 my $playlists = $win->add( 
@@ -253,6 +271,17 @@ sub draw_menu {
     $equalizer->draw();
     $progressbar->draw();
     $lyrics->draw();
+}
+
+sub draw_queue {
+    my $qtxt = "";
+    my $qnum = 0;
+    for (@QUEUE) {
+        $qtxt .= "[$qnum] " . $STORAGE->{'PLAYLIST'}{'ALL'}{$_}{'artist'} . " - " . $STORAGE->{'PLAYLIST'}{'ALL'}{$_}{'title'} . "\n";
+        $qnum++;
+    }
+    $queue->text($qtxt);
+    $queue->draw();
 }
 
 # store the storage hashref to .whistle.dat
@@ -439,13 +468,24 @@ sub play {
     $MAX_PL = (scalar (keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}})) - 1;
     return if $MAX_PL < 0;
     my $next = shift || '';
-    my ($index, $cur);
+    my ($index, $cur, $next_q);
     if ($next eq 'NEXT') {
-        $LAST_PLAYED = (($curlist->id())[0] || "$LAST_PLAYED");
-        $index = $SHUFFLE ? int(rand($MAX_PL)) : (($curlist->id())[0] || "$LAST_PLAYED") + 1;
-        $index = $index > $MAX_PL ? 0 : $index;
-        $curlist->clear_selection();
-        $curlist->set_selection($index);
+        if (@QUEUE) {
+            $LAST_PLAYED = (($curlist->id())[0] || "$LAST_PLAYED");
+            $next_q = shift @QUEUE;
+            my $next_id = $Q2INDEX{$next_q};
+            delete $Q2INDEX{$next_q};
+            $curlist->clear_selection();
+            $curlist->set_selection($next_id);
+            $index = $next_id;
+        }
+        else {
+            $LAST_PLAYED = (($curlist->id())[0] || "$LAST_PLAYED");
+            $index = $SHUFFLE ? int(rand($MAX_PL)) : (($curlist->id())[0] || "$LAST_PLAYED") + 1;
+            $index = $index > $MAX_PL ? 0 : $index;
+            $curlist->clear_selection();
+            $curlist->set_selection($index);
+        }
         $cur = ($curlist->get())[0];
         $LAST_PLAYED = $index;
     }
@@ -494,6 +534,7 @@ sub play {
         $curlist->draw();
     }
     $state = 'Playing';
+    &draw_queue();
 }
 
 # stop the current track, deactivate alarm
@@ -741,7 +782,8 @@ sub b10_switch { &band_switch(9); }
 sub help {
     $cui->dialog("P - play selected song\n" . "L - show lyrics\n" .
                  "p - pause\n" . "n - play next song\n" . "r - play previous song\n" .
-                 "j - jump to currently playing song\n" . 
+                 "j - jump to currently playing song\n" . "+ - add to queue\n" .
+                 "- - remove from queue\n" .
                  "S - stop playing\n". "t - toggle shuffle\n" . "e - rescan directories\n" .
                  "Q - quit\n\n" . "a - add to playlist\n" . "d - delete from playlist\n" .
                  "s - switch to playlist\n" . "A - add directory\n" . "R - remove directory\n" .
@@ -819,10 +861,49 @@ sub jump {
     }
 }
 
+sub enqueue {
+    my $id = ($curlist->get())[0];
+    return unless $id;
+    my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$id$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
+    return unless $msum;
+    for my $entry (@QUEUE) {
+        return if $entry eq $msum;
+    }
+    push @QUEUE, $msum;
+    $Q2INDEX{$msum} = $id;
+    open my $QFD, ">> /tmp/queue.log";
+    print $QFD "pushed $msum to queue\n";
+    close $QFD;
+    &draw_queue();
+    $curlist->clear_selection();
+    $curlist->draw();
+}
+sub dequeue {
+    my $id = ($curlist->get())[0];
+    return unless $id;
+    my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$id$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
+    return unless $msum;
+    my @NEW_Q;
+    for my $entry (@QUEUE) {
+        push @NEW_Q, $entry unless $entry eq $msum;
+    }
+    @QUEUE = @NEW_Q;
+    delete $Q2INDEX{$msum} if exists $Q2INDEX{$msum};
+    open my $QFD, ">> /tmp/queue.log";
+    print $QFD "deleted $msum from queue\n";
+    close $QFD;
+    &draw_queue();
+    $curlist->clear_selection();
+    $curlist->draw();
+}
+
+
 
 # define keybindings, draw menu for first time, start main loop :)
 $cui->set_binding(\&help, "h");
 $cui->set_binding(\&quit_program, "Q");
+$cui->set_binding(\&enqueue, "+");
+$cui->set_binding(\&dequeue, "-");
 $cui->set_binding(\&add_dir, "A");
 $cui->set_binding(\&rem_dir, "R");
 $cui->set_binding(\&del_pl, "D");
