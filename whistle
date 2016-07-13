@@ -42,7 +42,7 @@ chomp( my( $mplayer ) = <$WHICH> );
 close( $WHICH );
 
 # open read and write handles for mpv
-my $MPLPID = open2(my $Mout, my $Min, "$mplayer -idle -slave &> /dev/null") or die "mplayer hates me :(";
+my $MPLPID = open2(my $Mout, my $Min, "$mplayer -cache 4096 -idle -slave &> /dev/null") or die "mplayer hates me :(";
 
 
 # read in data if available, otherwise initialise STORAGE hashref
