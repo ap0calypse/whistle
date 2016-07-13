@@ -117,7 +117,7 @@ my $lyrics = $win->add(
     -wrapping => 1,
     -vscrollbar => 'right',
     -width => 52, # thats the width, period, nothing more, nothing less
-    -height => 14,
+    -height => 16,
     -intellidraw => 1,
     -border => 1,
 ) or die "lyrics";
@@ -127,7 +127,7 @@ my $queue = $win->add(
     -fg => 'white',
     -title => "Queue (+/-)",
     -readonly => 1,
-    -y => 30,
+    -y => 32,
     -x => 0,
     -focusable => 0,
     -wrapping => 0,
@@ -863,7 +863,7 @@ sub jump {
 
 sub enqueue {
     my $id = ($curlist->get())[0];
-    return unless $id;
+    return unless defined $id;
     my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$id$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
     return unless $msum;
     for my $entry (@QUEUE) {
@@ -877,7 +877,7 @@ sub enqueue {
 }
 sub dequeue {
     my $id = ($curlist->get())[0];
-    return unless $id;
+    return unless defined $id;
     my ($msum) = grep { $STORAGE->{'PLAYLIST'}{$CUR_LIST}{$_}{'index'} =~ /^$id$/ } keys %{$STORAGE->{'PLAYLIST'}{$CUR_LIST}};
     return unless $msum;
     my @NEW_Q;
