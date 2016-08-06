@@ -93,6 +93,7 @@ What works? a.k.a. Features:
         - per-song/album-equalizer (meaning: individual equalizer settings 
           for each title/album/artist)
         - lyrics fetching support
+        - queue support (+/-)
 
 
 What's to come?
@@ -119,6 +120,7 @@ usage scenario then is to select what you want to play and press 'P'.
 
 Thanks:
 -------
+ - my girlfriend for beta-testing and giving me hints for improvements :)
  - all the people testing and helping me to improve whistle :)
    (kmandla, matthew cox, smiszym, ...)
  - all the supportive people of the arch-community :)
