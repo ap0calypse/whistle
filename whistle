@@ -719,7 +719,7 @@ sub get_lyrics {
     if ($link) {
         $response = $ua->get("$link");
         $content = $response->decoded_content();
-
+    
         if ($content =~ m/.+<div>.+?<!-- Usage.+?-->(.+?)<\/div>.+/gms) {
             $final = "Lyrics from azlyrics.com\n";
             $final .= $1;
@@ -737,7 +737,7 @@ sub get_lyrics {
             $response = $ua->get("http://www.elyrics.net$link");
             $content = $response->decoded_content();
 
-            if ($content =~ m/.+<div id='inlyr' style='font-size:14px;'>(.+?)<p><form action="\/submit_lyrics.php".+/gms) {
+            if ($content =~ m/.+<div id='inlyr' style='font-size:14px;'>(.+?)<div class="read3">.+/gms) {
                 $final = "Lyrics from elyrics.net\n\n";
                 $final .= $1;
             }
