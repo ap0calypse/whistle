@@ -135,5 +135,4 @@ Thanks:
 
 If you want to give me some crypto-credit, please use one of these adresses:
 
-  - BitCoin:    3NMFVp7YacwPH8F45aGhsdU618oooqjup8
-  - DogeCoin:   D6ZEvKSEKz85iiLbQ9BUEoEXcdUQXLnK6w
+  - BitCoin:    1Jg3TY5of4gFvmRRQfJEozhTT7dZntWSmT
