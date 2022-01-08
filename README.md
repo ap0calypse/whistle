@@ -135,4 +135,6 @@ Thanks:
 
 If you want to give me some crypto-credit, please use one of these adresses:
 
-  - BitCoin:    1Jg3TY5of4gFvmRRQfJEozhTT7dZntWSmT
+LTC - LcWms1wddhRKWyE7JDSxZcY6gZTGTAttXG
+BTC - bc1qkggktuhhdms2ue6c04archpvc6h4pqfeu25y3h
+DOGE - DRpqNpcfAidAFmkLzaLoB6gVrRgKzNtiRC
